@@ -267,4 +267,3 @@ function ReportsPage() {
     </AppLayout>
   );
 }
-

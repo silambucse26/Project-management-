@@ -74,6 +74,7 @@ function ProjectDetailPage() {
     : project.progress;
   const team = users.filter((user) => user.department === project.department && user.role !== "admin");
   const involvedTeam = team.filter((user) => allProjectTasks.some((task) => task.assigneeId === user.id || task.assignee === user.name));
+
   const memberTaskGroups = Array.from(
     viewerProjectTasks.reduce((groups, task) => {
       const key = task.assigneeId ?? task.assignee;
@@ -102,6 +103,7 @@ function ProjectDetailPage() {
       initials: member.initials,
       tasks: [] as typeof viewerProjectTasks,
     }));
+
   const creatorName = (id?: string) => users.find((user) => user.id === id)?.name ?? "Workspace";
   const projectHead = users.find((user) => user.id === project.ownerId) ?? users.find((user) => user.name === project.owner);
   const taskTimeline = allProjectTasks.slice(0, 8);
@@ -190,6 +192,7 @@ function ProjectDetailPage() {
       </Card>
 
       <Card className="p-5">
+
         <div className="flex items-center justify-between gap-3 mb-3">
           <div>
             <h3 className="font-semibold">{role === "member" ? "My Project Work" : "Team Members"}</h3>

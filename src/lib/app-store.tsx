@@ -8,7 +8,9 @@ import {
   type Role,
   users as seedUsers,
   projects as seedProjects,
+
   initialTasks as seedTasks,
+
   departments as seedDepartments,
   departmentRoleOptions,
   type User,
@@ -381,7 +383,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(stored?.currentUser ?? null);
   const [users, setUsers] = useState<User[]>((stored?.users ?? seedUsers).map(withDefaultCredentials));
   const [projects, setProjects] = useState<Project[]>(stored?.projects ?? seedProjects);
+
   const [tasks, setTasks] = useState<Task[]>((stored?.tasks?.length ? stored.tasks : seedTasks).map(hydrateTask));
+
+  const [tasks, setTasks] = useState<Task[]>((stored?.tasks ?? []).map(hydrateTask));
+
   const [approvals, setApprovals] = useState<Approval[]>(stored?.approvals ?? []);
   const [activities, setActivities] = useState<Activity[]>(stored?.activities ?? []);
   const [notifications, setNotifications] = useState<Notification[]>(stored?.notifications ?? []);
@@ -408,14 +414,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!cancelled) {
           setUsers(defaultUsers);
           setProjects(seedProjects);
+
           setTasks(seedTasks.map(hydrateTask));
+
         }
         return;
       }
 
       setUsers((data.users.length ? data.users : seedUsers).map(withDefaultCredentials));
       setProjects(data.projects.length ? data.projects : seedProjects);
+
       setTasks((data.tasks.length ? data.tasks : seedTasks).map(hydrateTask));
+      setTasks(data.tasks.map(hydrateTask));
+
       setApprovals(data.approvals);
       setActivities(data.activities);
       setNotifications(data.notifications);
