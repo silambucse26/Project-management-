@@ -386,8 +386,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [tasks, setTasks] = useState<Task[]>((stored?.tasks?.length ? stored.tasks : seedTasks).map(hydrateTask));
 
-  const [tasks, setTasks] = useState<Task[]>((stored?.tasks ?? []).map(hydrateTask));
-
   const [approvals, setApprovals] = useState<Approval[]>(stored?.approvals ?? []);
   const [activities, setActivities] = useState<Activity[]>(stored?.activities ?? []);
   const [notifications, setNotifications] = useState<Notification[]>(stored?.notifications ?? []);
@@ -425,7 +423,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setProjects(data.projects.length ? data.projects : seedProjects);
 
       setTasks((data.tasks.length ? data.tasks : seedTasks).map(hydrateTask));
-      setTasks(data.tasks.map(hydrateTask));
 
       setApprovals(data.approvals);
       setActivities(data.activities);

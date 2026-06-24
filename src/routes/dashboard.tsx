@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatCard } from "@/components/common/StatCard";
 import { StatusBadge } from "@/components/common/StatusBadge";
+import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -78,16 +79,147 @@ function Dashboard() {
     return { user, total: memberTasks.length, done, pending: memberTasks.length - done, delayed, submitted, last };
   });
 
-  if (role === "member") {
-    return (
-      <AppLayout title={`Welcome back, ${currentUser.name}`} badge="Team Member" subtitle={`${currentUser.department} daily work`}>
-        <Card className="p-8 text-center">
-          <h2 className="text-lg font-semibold">Open My Tasks to plan and complete your daily work.</h2>
-          <p className="text-sm text-muted-foreground mt-1">{tasks.length} assigned tasks are connected to your profile.</p>
-        </Card>
-      </AppLayout>
-    );
-  }
+if (role === "member") {
+  const myTasks = tasks.filter(
+    (task) =>
+      task.assigneeId === currentUser.id ||
+      task.assignee === currentUser.name
+  );
+
+  const myProjects = visibleProjects.filter((project) =>
+    myTasks.some(
+      (task) =>
+        task.projectId === project.id ||
+        task.projectName === project.name
+    )
+  );
+
+  return (
+    <AppLayout
+      title={`Welcome back, ${currentUser.name}`}
+      badge="Team Member"
+      subtitle={`${currentUser.department} daily work`}
+    >
+     {/* Profile + Calendar */}
+<Card className="p-5">
+  <div className="grid lg:grid-cols-[1fr_340px] gap-6 items-start">
+    {/* Profile Details */}
+    <div>
+      <h2 className="font-semibold text-lg mb-4">
+        My Profile
+      </h2>
+
+      <div className="grid grid-cols-[120px_20px_1fr] gap-y-4">
+        <span className="text-muted-foreground font-medium">
+          Name
+        </span>
+        <span>:</span>
+        <span className="font-medium">
+          {currentUser.name}
+        </span>
+
+        <span className="text-muted-foreground font-medium">
+          Role
+        </span>
+        <span>:</span>
+        <span>
+          {currentUser.role}
+        </span>
+
+        <span className="text-muted-foreground font-medium">
+          Department
+        </span>
+        <span>:</span>
+        <span>
+          {currentUser.department}
+        </span>
+
+        <span className="text-muted-foreground font-medium">
+          Email
+        </span>
+        <span>:</span>
+        <span>
+          {currentUser.email}
+        </span>
+      </div>
+    </div>
+
+    {/* Calendar */}
+    <div>
+      <h3 className="font-medium mb-3">
+        My Calendar
+      </h3>
+
+      <Calendar
+        mode="single"
+        className="rounded-md border"
+      />
+    </div>
+  </div>
+</Card>
+
+{/* Assigned Projects */}
+<Card className="p-5 mt-4">
+  <h2 className="font-semibold mb-3">
+    My Projects
+  </h2>
+
+  <div className="grid md:grid-cols-2 gap-3">
+    {myProjects.map((project) => (
+      <div key={project.id} className="border rounded-lg p-3">
+        <h3 className="font-medium">
+          {project.name}
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          {project.department}
+        </p>
+      </div>
+    ))}
+  </div>
+</Card>
+
+      {/* Assigned Tasks */}
+      <Card className="p-5 mt-4">
+        <h2 className="font-semibold mb-3">My Assigned Tasks</h2>
+
+        <div className="space-y-3">
+          {myTasks.map((task) => (
+            <div
+              key={task.id}
+              className="border rounded-lg p-4"
+            >
+              <div className="flex justify-between">
+                <h3 className="font-medium">{task.title}</h3>
+                <StatusBadge status={task.status} />
+              </div>
+
+              <p className="text-sm text-muted-foreground mt-2">
+                {task.description}
+              </p>
+
+              <div className="grid md:grid-cols-3 gap-3 mt-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Project</span>
+                  <p>{task.projectName}</p>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground">Priority</span>
+                  <p>{task.priority}</p>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground">Department</span>
+                  <p>{task.department}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </AppLayout>
+  );
+}
 
   return (
     <AppLayout title={role === "admin" ? "Admin Dashboard" : "Department Dashboard"} badge="Overview" subtitle={role === "admin" ? "All heads, members, and tasks" : `${currentUser.department} tasks and team`}>

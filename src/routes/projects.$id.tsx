@@ -128,11 +128,6 @@ function ProjectDetailPage() {
             <div><div className="text-xs text-muted-foreground">Team</div><div className="font-medium text-sm mt-0.5 flex items-center gap-1"><Users className="size-3" />{team.length || project.teamSize}</div></div>
             <div><div className="text-xs text-muted-foreground">Progress</div><div className="font-bold text-primary mt-0.5">{progress}%</div></div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <Button size="sm" asChild><Link to="/tasks">Assign Task</Link></Button>
-            <Button size="sm" variant="outline">Update Status</Button>
-            <Button size="sm" variant="outline">Review Milestone</Button>
-          </div>
         </div>
         <div className="mt-4"><Progress value={progress} className="h-2" /></div>
       </Card>
