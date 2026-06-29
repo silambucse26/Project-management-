@@ -12,7 +12,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PriorityBadge, StatusBadge } from "@/components/common/StatusBadge";
 import { useApp } from "@/lib/app-store";
-import { CheckCircle2, Circle, Clock, FileText, Plus, Send, AlertTriangle, UserRound, Users } from "lucide-react";
+import {
+  CheckCircle2,
+  Circle,
+  Clock,
+  FileText,
+  Plus,
+  Send,
+  AlertTriangle,
+  UserRound,
+  Users,
+  Upload,
+  Download,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/projects/$id")({ component: ProjectDetailPage });
@@ -103,7 +116,16 @@ function ProjectDetailPage() {
       initials: member.initials,
       tasks: [] as typeof viewerProjectTasks,
     }));
+  const [documents, setDocuments] = useState<File[]>([]);
+  const handleDocumentUpload = (
+  event: React.ChangeEvent<HTMLInputElement>
+) => {
+  if (!event.target.files) return;
 
+  const files = Array.from(event.target.files);
+
+  setDocuments((prev) => [...prev, ...files]);
+};
   const creatorName = (id?: string) => users.find((user) => user.id === id)?.name ?? "Workspace";
   const projectHead = users.find((user) => user.id === project.ownerId) ?? users.find((user) => user.name === project.owner);
   const taskTimeline = allProjectTasks.slice(0, 8);
@@ -452,17 +474,81 @@ function ProjectDetailPage() {
             </div>
           </Card>
         </TabsContent>
-
         <TabsContent value="documents">
-          <Card className="p-5">
-            <h3 className="font-semibold mb-3">Documents & Attachments</h3>
-            <div className="space-y-2">
-              <div className="flex items-center gap-3 p-3 rounded-lg border text-muted-foreground">
-                <FileText className="size-4" /><span className="text-sm">No project documents uploaded yet.</span>
+  <Card className="p-5">
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="font-semibold">Project Documents</h3>
+
+      <label>
+        <Input
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleDocumentUpload}
+        />
+
+        <Button asChild>
+          <span>
+            <Upload className="size-4 mr-2" />
+            Upload Document
+          </span>
+        </Button>
+      </label>
+    </div>
+
+    {documents.length === 0 ? (
+      <div className="rounded-lg border border-dashed p-10 text-center">
+        <Upload className="mx-auto mb-3 size-8 text-muted-foreground" />
+
+        <h4 className="font-medium">No documents uploaded</h4>
+
+        <p className="text-sm text-muted-foreground mt-1">
+          Upload PDF, Word, Excel, Images or ZIP files.
+        </p>
+      </div>
+    ) : (
+      <div className="space-y-3">
+        {documents.map((doc, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between rounded-lg border p-3"
+          >
+            <div className="flex items-center gap-3">
+              <FileText className="size-5 text-primary" />
+
+              <div>
+                <div className="font-medium">{doc.name}</div>
+
+                <div className="text-xs text-muted-foreground">
+                  {(doc.size / 1024).toFixed(1)} KB
+                </div>
               </div>
             </div>
-          </Card>
-        </TabsContent>
+
+            <div className="flex gap-2">
+              <Button size="icon" variant="outline">
+                <Download className="size-4" />
+              </Button>
+
+              <Button
+                size="icon"
+                variant="destructive"
+                onClick={() =>
+                  setDocuments((prev) =>
+                    prev.filter((_, i) => i !== index)
+                  )
+                }
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </Card>
+</TabsContent>
+       
 
         <TabsContent value="team">
           <Card className="p-5">

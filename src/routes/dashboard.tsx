@@ -231,7 +231,7 @@ if (role === "member") {
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-4 gap-6">
         <Card className="p-5 lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Task Progress Overview</h3>
@@ -253,20 +253,35 @@ if (role === "member") {
           </div>
         </Card>
 
-        <Card className="p-5">
-          <h3 className="font-semibold mb-1">Access Scope</h3>
-          <p className="text-xs text-muted-foreground mb-4">{role === "admin" ? "Admin can control all heads and members." : "Head can control own department members."}</p>
-          <div className="space-y-3">
-            {visibleUsers.slice(0, 5).map((user) => (
-              <div key={user.id} className="rounded-lg p-3 bg-muted/50">
-                <div className="font-semibold text-sm">{user.name}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">{user.title} - {user.department}</div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
+            <Card className="p-5">
+        <h3 className="font-semibold mb-3">Calendar</h3>
 
+        <Calendar
+          mode="single"
+          className="rounded-md border w-full"
+        />
+      </Card>
+
+      <Card className="p-5">
+        <h3 className="font-semibold mb-1">Access Scope</h3>
+        <p className="text-xs text-muted-foreground mb-4">
+          {role === "admin"
+            ? "Admin can control all heads and members."
+            : "Head can control own department members."}
+        </p>
+
+        <div className="space-y-3">
+          {visibleUsers.slice(0, 5).map((user) => (
+            <div key={user.id} className="rounded-lg p-3 bg-muted/50">
+              <div className="font-semibold text-sm">{user.name}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                {user.title} - {user.department}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+      </div>
       <Card className="p-5">
         <div className="flex items-center justify-between gap-3 mb-4">
           <div>
