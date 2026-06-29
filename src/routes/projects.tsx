@@ -163,27 +163,34 @@ function ProjectsPage() {
         </Card>
 
         <Card className="p-5 lg:col-span-2">
-          <h3 className="font-semibold mb-4">Project Timeline</h3>
+          <h3 className="font-semibold mb-4">Project Tasks</h3>
           <div className="space-y-3">
-            {projects.slice(0,5).map((p, i) => (
-              <div key={p.id}>
-                <div className="flex justify-between text-sm mb-1 gap-3">
-                  <Link
-                    to="/projects/$id"
-                    params={{ id: p.id }}
-                    className="font-medium truncate rounded-sm hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            {projects.slice(0, 5).map((p,i) => (
+              <div
+               key={p.id}
+               className="grid grid-cols-[160px_1fr_180px] items-center gap-4"
+               >
+                <Link 
+                  to="/projects/$id"
+                  params={{id: p.id}}
+                  className="font=medium text-sm truncate rounded-sm hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {p.name}
-                  </Link>
-                  <span className="text-muted-foreground shrink-0">{p.due}</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden relative">
-                  <div className="h-full bg-primary rounded-full" style={{ width: `${projectProgress(p)}%`, marginLeft: `${i*3}%` }} />
-                </div>
-              </div>
-            ))}
+              </Link>
+              <div className="h-3 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full"
+                style={{
+                  width: '${projectprogress(p)%' ,
+                }}
+              />
+            </div>
+            <span className="text-sm text-muted-foreground text-right whitespace-nowrap">
+              Due {p.due}
+            </span>
           </div>
-        </Card>
+        ))}
+      </div>
+     </Card>
       </div>
 
       <div className="grid xl:grid-cols-2 gap-5">

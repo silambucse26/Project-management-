@@ -35,7 +35,7 @@ function TeamsPage() {
   const defaultDepartment = role === "admin" ? departments[0].name : currentUser.department;
   const initialRole = departmentRoleOptions[defaultDepartment]?.[0] ?? "Team Member";
   const [memberForm, setMemberForm] = useState({ name: "", email: "", department: defaultDepartment, title: initialRole });
-
+  const canManageTeam = role === "admin" || role === "head";
   const allowedDepartments = role === "admin" ? departments.map((d) => d.name) : [currentUser.department];
   const filtered = (filter === "all" ? departments : departments.filter(d => d.name === filter)).filter((department) => allowedDepartments.includes(department.name));
   const filterChips = ["all", ...allowedDepartments];
@@ -87,6 +87,7 @@ function TeamsPage() {
               {c === "all" ? "All Departments" : c}
             </button>
           ))}
+        {canManageTeam && (
           <div className="ml-auto">
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild><Button size="sm"><UserPlus className="size-4" />Add Member</Button></DialogTrigger>
@@ -120,6 +121,7 @@ function TeamsPage() {
               </DialogContent>
             </Dialog>
           </div>
+        )}
         </div>
       </Card>
 
@@ -194,7 +196,7 @@ function TeamsPage() {
             </BarChart>
           </ResponsiveContainer>
         </Card>
-
+     {canManageTeam && (
         <Card className="p-5">
           <h3 className="font-semibold mb-3">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-2">
@@ -218,42 +220,97 @@ function TeamsPage() {
               )}
             </div>
           </div>
-        </Card>
+        </Card> 
+      )}
       </div>
+<div>
+  <h2 className="text-lg font-semibold mb-3">Team Roster</h2>
 
-      <div>
-        <h2 className="text-lg font-semibold mb-3">Team Roster</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {visibleUsers.filter(u=>u.role!=="admin").map(u=>{
-            const memberTasks = tasks.filter((task) => task.assigneeId === u.id || task.assignee === u.name || task.createdById === u.id);
-            const done = memberTasks.filter((task) => task.status === "completed" || task.status === "approved").length;
-            const pending = memberTasks.filter((task) => task.status !== "completed" && task.status !== "approved").length;
-            const workload = Math.min(100, Math.round((pending / 5) * 100));
-            const last = activities.find((activity) => activity.user === u.name);
-            return (
-              <Card key={u.id} className="p-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="size-11"><AvatarFallback className="bg-primary/10 text-primary text-sm">{u.initials}</AvatarFallback></Avatar>
-                  <div className="min-w-0">
-                    <div className="font-medium text-sm truncate">{u.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{u.title} - {u.department}</div>
+  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    {visibleUsers
+      .filter((u) => u.role !== "admin")
+      .map((u) => {
+        const memberTasks = tasks.filter(
+          (task) =>
+            task.assigneeId === u.id ||
+            task.assignee === u.name ||
+            task.createdById === u.id
+        );
+
+        const done = memberTasks.filter(
+          (task) =>
+            task.status === "completed" || task.status === "approved"
+        ).length;
+
+        const pending = memberTasks.filter(
+          (task) =>
+            task.status !== "completed" && task.status !== "approved"
+        ).length;
+
+        const workload = Math.min(100, Math.round((pending / 5) * 100));
+        const last = activities.find((activity) => activity.user === u.name);
+
+        return (
+          <Card key={u.id} className="p-4">
+            <div className="flex items-center gap-3">
+              <Avatar className="size-11">
+                <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                  {u.initials}
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="min-w-0">
+                <div className="font-medium text-sm truncate">{u.name}</div>
+
+                {canManageTeam && (
+                  <div className="text-xs text-muted-foreground truncate">
+                    {u.title} - {u.department}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {canManageTeam && (
+              <>
+                <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                  <div>
+                    <div className="text-muted-foreground">Tasks</div>
+                    <div className="font-semibold">{memberTasks.length}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-muted-foreground">Done</div>
+                    <div className="font-semibold text-success">{done}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-muted-foreground">Pending</div>
+                    <div className="font-semibold text-warning">{pending}</div>
                   </div>
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                  <div><div className="text-muted-foreground">Tasks</div><div className="font-semibold">{memberTasks.length}</div></div>
-                  <div><div className="text-muted-foreground">Done</div><div className="font-semibold text-success">{done}</div></div>
-                  <div><div className="text-muted-foreground">Pending</div><div className="font-semibold text-warning">{pending}</div></div>
-                </div>
+
                 <div className="mt-3">
-                  <div className="flex justify-between text-[11px] mb-1"><span className="text-muted-foreground">Workload</span><span>{workload}%</span></div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="text-muted-foreground">Workload</span>
+                    <span>{workload}%</span>
+                  </div>
+
                   <Progress value={workload} className="h-1.5" />
                 </div>
-                <div className="mt-2 text-[11px] text-muted-foreground truncate">Last activity: {last ? `${last.action} (${last.time})` : "No team activity yet"}</div>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
+
+                <div className="mt-2 text-[11px] text-muted-foreground truncate">
+                  Last activity:{" "}
+                  {last
+                    ? `${last.action} (${last.time})`
+                    : "No team activity yet"}
+                </div>
+              </>
+            )}
+          </Card>
+        );
+      })}
+  </div>
+</div>
     </AppLayout>
   );
 }

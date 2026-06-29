@@ -111,7 +111,7 @@ function MyWorkPage() {
   const [progressOpen, setProgressOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [progressValue, setProgressValue] = useState("25");
-
+  const [taskView, setTaskView] = useState<"head" | "mytask">("head");
   const completed = myTasks.filter(
     (task) => task.status === "completed" || task.status === "approved"
   ).length;
@@ -455,56 +455,70 @@ function MyWorkPage() {
         <StatCard label="Created by Me" value={createdByMeTasks.length} icon={Timer} tone="info" />
         <StatCard label="Completed" value={completed} icon={CheckCircle2} tone="success" />
       </div>
+     <Card className="p-5">
+  <div className="flex items-center justify-between mb-4">
+    <div>
+      <h3 className="font-semibold">
+        {taskView === "head" ? "Tasks" : "My Tasks"}
+      </h3>
+      <p className="text-xs text-muted-foreground">
+        {taskView === "head"
+          ? "Tasks assigned to you by your Head."
+          : "Tasks that you created for yourself."}
+      </p>
+    </div>
 
-      <Card className="p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h3 className="font-semibold">Tasks Assigned by Head / Manager</h3>
-            <p className="text-xs text-muted-foreground">
-              Tasks assigned to you by your Head / Manager.
-            </p>
-          </div>
+    <Badge variant="outline">
+      {taskView === "head"
+        ? assignedByHeadTasks.length
+        : createdByMeTasks.length}{" "}
+      Tasks
+    </Badge>
+  </div>
 
-          <Badge variant="outline">{assignedByHeadTasks.length} Tasks</Badge>
-        </div>
+  <div className="flex gap-2 mb-4">
+    <Button
+      size="sm"
+      variant={taskView === "head" ? "default" : "outline"}
+      onClick={() => setTaskView("head")}
+    >
+      Head
+    </Button>
 
-        <div className="space-y-2">
-          {assignedByHeadTasks.map((task) => (
-            <TaskRow key={task.id} task={task} type="assigned" />
-          ))}
+    <Button
+      size="sm"
+      variant={taskView === "mytask" ? "default" : "outline"}
+      onClick={() => setTaskView("mytask")}
+    >
+      My Task
+    </Button>
+  </div>
 
-          {!assignedByHeadTasks.length && (
-            <div className="text-sm text-muted-foreground p-4 text-center">
-              No tasks assigned by Head / Manager.
-            </div>
-          )}
-        </div>
-      </Card>
+  <div className="space-y-2">
+    {taskView === "head" &&
+      assignedByHeadTasks.map((task) => (
+        <TaskRow key={task.id} task={task} type="assigned" />
+      ))}
 
-      <Card className="p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h3 className="font-semibold">Tasks Created by Me</h3>
-            <p className="text-xs text-muted-foreground">
-              Tasks that you created for yourself.
-            </p>
-          </div>
+    {taskView === "mytask" &&
+      createdByMeTasks.map((task) => (
+        <TaskRow key={task.id} task={task} type="created" />
+      ))}
 
-          <Badge variant="outline">{createdByMeTasks.length} Tasks</Badge>
-        </div>
+    {taskView === "head" && !assignedByHeadTasks.length && (
+      <div className="text-sm text-muted-foreground p-4 text-center">
+        No tasks assigned by Head / Manager.
+      </div>
+    )}
 
-        <div className="space-y-2">
-          {createdByMeTasks.map((task) => (
-            <TaskRow key={task.id} task={task} type="created" />
-          ))}
+    {taskView === "mytask" && !createdByMeTasks.length && (
+      <div className="text-sm text-muted-foreground p-4 text-center">
+        You have not created any tasks.
+      </div>
+    )}
+  </div>
+</Card>
 
-          {!createdByMeTasks.length && (
-            <div className="text-sm text-muted-foreground p-4 text-center">
-              You have not created any tasks.
-            </div>
-          )}
-        </div>
-      </Card>
 
       <Dialog open={dueOpen} onOpenChange={setDueOpen}>
         <DialogContent>

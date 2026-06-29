@@ -295,21 +295,47 @@ function ProjectDetailPage() {
 
         <TabsContent value="overview" className="space-y-6">
           <Card className="p-5">
-            <h3 className="font-semibold mb-4">Gantt Timeline</h3>
-            <div className="space-y-2">
-              {taskTimeline.map((task, index) => (
-                <div key={task.id} className="grid grid-cols-12 gap-3 items-center text-sm">
-                  <div className="col-span-4 truncate font-medium">{task.title}</div>
-                  <div className="col-span-6 relative h-7 bg-muted/40 rounded">
-                    <div className={`absolute top-0 h-full rounded ${task.status === "completed" || task.status === "approved" ? "bg-success" : "bg-primary/80"}`} style={{ left: `${Math.min(index * 6, 40)}%`, width: `${Math.max(task.completionPercent ?? 20, 18)}%` }} />
-                  </div>
-                  <div className="col-span-2 text-xs text-muted-foreground text-right">{task.startDate ?? "Start"} - {task.due}</div>
-                </div>
-              ))}
-              {!taskTimeline.length && <div className="text-sm text-muted-foreground text-center p-4">No project tasks yet.</div>}
-            </div>
-          </Card>
+  <h3 className="font-semibold mb-4">Gantt Timeline</h3>
 
+  <div className="space-y-3">
+    {taskTimeline.map((task, index) => (
+      <div
+        key={task.id}
+        className="grid grid-cols-[220px_1fr_210px] items-center gap-4 text-sm"
+      >
+        <div className="truncate font-medium">{task.title}</div>
+
+        <div className="relative h-8 bg-muted/40 rounded overflow-hidden">
+          <div
+            className={`absolute top-1/2 -translate-y-1/2 h-5 rounded ${
+              task.status === "completed" || task.status === "approved"
+                ? "bg-success"
+                : "bg-primary/80"
+            }`}
+            style={{
+              left: `${Math.min(index * 6, 40)}%`,
+              width: `${Math.min(
+                Math.max(task.completionPercent ?? 20, 18),
+                100 - Math.min(index * 6, 40)
+              )}%`,
+            }}
+          />
+        </div>
+
+        <div className="text-xs text-muted-foreground text-right whitespace-nowrap">
+          {task.startDate ?? "Start"} - {task.due}
+        </div>
+      </div>
+    ))}
+
+    {!taskTimeline.length && (
+      <div className="text-sm text-muted-foreground text-center p-4">
+        No project tasks yet.
+      </div>
+    )}
+  </div>
+</Card>
+          
           <div className="grid lg:grid-cols-3 gap-6">
             <Card className="p-5">
               <h3 className="font-semibold mb-3">Progress Analytics</h3>
