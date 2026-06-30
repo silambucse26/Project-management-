@@ -390,72 +390,85 @@ function TasksPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+  <div className="space-y-4">
+    {columns.map((col) => (
+      <Card key={col.id} className="overflow-hidden">
+        <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
+         <div className="flex items-center gap-2">
+           <div className={'size-2 rounded-full ${col.color}'} />
+           <h3  className="font-semibold">{col.label}</h3>
+           </div>
+           <Badge variant="outline">
+            {grouped[col.id].length}tasks
+            </Badge>
+           </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {columns.map(col => (
-          <div key={col.id} className="flex flex-col">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className={`size-2 rounded-full ${col.color}`} />
-                <span className="font-semibold text-sm">{col.label}</span>
-              </div>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{grouped[col.id].length}</span>
+           {grouped[col.id].length == 0 ? (
+            <div className="p-6 text-sm text -muted-foreground">
+              No tasks in {col.label}
             </div>
-            <div className="space-y-2.5 min-h-[200px]">
-              {grouped[col.id].map(t => {
+           )  :  (
+            <div className="divide-y">
+              {grouped[col.id].map((t) => {
+                 const progress =
+                  t.completionPercent ??
+                  (t.status == "completed" || t.status === "approved" ? 100 : 0);
                 const delayed = isDelayed(t);
-
                 return (
-                <Card key={t.id} className={`p-3 hover:shadow-md transition-shadow cursor-grab gap-2 ${delayed ? "border-destructive/40 bg-destructive/5" : ""}`}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="text-sm font-medium leading-snug">{t.title}</div>
-                    {delayed && <span className="shrink-0 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">Delayed</span>}
-                  </div>
-                  {t.projectName && <div className="text-[11px] text-primary font-medium truncate">{t.projectName}</div>}
-                  {t.description && <div className="text-xs text-muted-foreground line-clamp-2">{t.description}</div>}
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">{t.department}</span>
-                    <PriorityBadge priority={t.priority} />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-[11px] mb-1">
-                      <span className="text-muted-foreground">Completed</span>
-                      <span className="font-medium">{t.completionPercent ?? (t.status === "completed" ? 100 : 0)}%</span>
-                    </div>
-                    <Progress value={t.completionPercent ?? (t.status === "completed" ? 100 : 0)} className="h-1" />
-                  <div className="mt-1 text-[11px] text-warning">{100 - (t.completionPercent ?? (t.status === "completed" || t.status === "approved" ? 100 : 0))}% balance</div>
-                  </div>
-                  {t.checklistTotal ? (
-                    <div>
-                      <div className="text-[11px] text-muted-foreground mb-1">{t.checklistDone}/{t.checklistTotal}</div>
-                      <Progress value={(t.checklistDone!/t.checklistTotal)*100} className="h-1" />
-                    </div>
-                  ) : null}
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="size-6"><AvatarFallback className="text-[10px] bg-muted">{t.assignee.split(" ").map(s=>s[0]).slice(0,2).join("")}</AvatarFallback></Avatar>
-                      <span className={`text-[11px] ${delayed ? "font-semibold text-destructive" : "text-muted-foreground"}`}>{displayDueDate(t.due)}</span>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={()=>openTaskDetails(t)}>Details</Button>
-                      {t.approvalStatus !== "pending" && t.approvalStatus !== "approved" && (
-                        <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={()=>{submitTaskForReview(t.id); toast.success("Submitted for review");}}>Submit</Button>
-                      )}
-                      <button onClick={()=>moveTask(t,-1)} className="grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Move task back">
-                        <ChevronLeft className="size-3.5" />
-                      </button>
-                      <button onClick={()=>moveTask(t,1)} className="grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Move task forward">
-                        <ChevronRight className="size-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </Card>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
+                   <div 
+                    key={t.id}
+                    className="grid grid-cols-1 gap-3 px-4 py-4 hover:bg-muted/30 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]"
+                    >
+                      <div>
+                        <div className="font-medium">{t.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {t.projectName}
+                        </div>
+                      </div>
+                      <div className="text-sm">{t.department}</div>
+                      <PriorityBadge priority={t.priority} />
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium">{progress}%</div>
+                        <progress value={progress} className="h-1.5" />
+                      </div>
+                      <div
+                  className={`text-sm ${
+                    delayed ? "font-semibold text-destructive" : ""
+                  }`}
+                >
+                  {displayDueDate(t.due)}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openTaskDetails(t)}
+                  >
+                    View
+                  </Button>
+
+                  {t.approvalStatus !== "pending" &&
+                    t.approvalStatus !== "approved" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          submitTaskForReview(t.id);
+                          toast.success("Submitted for review");
+                        }}
+                      >
+                        Submit
+                      </Button>
+                    )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  ))}
+</div>
     </AppLayout>
   );
 }
