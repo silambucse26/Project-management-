@@ -8,11 +8,16 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useApp } from "@/lib/app-store";
 import { toast } from "sonner";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 export const Route = createFileRoute("/settings")({ component: SettingsPage });
 
 function SettingsPage() {
   const { currentUser, role } = useApp();
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+
   return (
     <AppLayout title="Settings" badge="Account" subtitle="Manage your workspace preferences">
       <Tabs defaultValue="profile">
@@ -49,12 +54,46 @@ function SettingsPage() {
           </Card>
         </TabsContent>
         <TabsContent value="security" className="mt-4">
-          <Card className="p-6 max-w-2xl space-y-4">
-            <div><Label>Current Password</Label><Input type="password" /></div>
-            <div><Label>New Password</Label><Input type="password" /></div>
-            <Button onClick={()=>toast.success("Password updated")}>Update Password</Button>
-          </Card>
-        </TabsContent>
+        <Card className="p-6 max-w-2xl space-y-4">
+          <div>
+            <Label>Current Password</Label>
+            <div className="relative">
+              <Input
+                type={showCurrentPassword ? "text" : "password"}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              >
+                {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <Label>New Password</Label>
+            <div className="relative">
+              <Input
+                type={showNewPassword ? "text" : "password"}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              >
+                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <Button onClick={() => toast.success("Password updated")}>
+            Update Password
+          </Button>
+        </Card>
+      </TabsContent>
       </Tabs>
     </AppLayout>
   );
