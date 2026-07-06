@@ -54,6 +54,12 @@ interface AppState {
   updateTaskDetails: (id: string, updates: Partial<Pick<Task, "completionPercent" | "pendingReason" | "delayReason" | "startDate" | "due">>) => void;
   submitTaskDelayReason: (id: string, reason: string) => void;
   submitTaskPendingInfo: (id: string, info: string) => void;
+  submitLeaveRequest: (data: {
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+}) => void;
   submitTaskForReview: (id: string) => void;
   approvals: Approval[];
   setApprovalStatus: (id: string, status: Approval["status"], reason?: string) => void;
@@ -324,7 +330,7 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
                 <Input
                   value={form.name}
                   onChange={(event) => setForm({ ...form, name: event.target.value })}
-                  placeholder={form.role === "admin" ? "Dr. Ragul" : form.role === "head" ? selectedHead?.name ?? "Department head" : "Enter your full name"}
+                  placeholder={form.role === "head" ? selectedHead?.name ?? "Department head" : "Enter your full name"}
                 />
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
@@ -343,7 +349,6 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
                     <SelectContent>
                       <SelectItem value="member">Team Member</SelectItem>
                       <SelectItem value="head">Department Head</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -365,6 +370,13 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
               <div>
                 <Label>Department Head</Label>
                 <Input value={selectedHead ? `${selectedHead.name} - ${selectedHead.title}` : "No head assigned"} readOnly />
+              </div>
+
+              <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
+                <div className="font-medium text-foreground">Admin account is preconfigured</div>
+                <div className="mt-2">Name: Dr. Ragul</div>
+                <div>Employee ID: ADM001</div>
+                <div>Password: admin@123</div>
               </div>
             </>
           )}
@@ -444,11 +456,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const visibleUsers = useMemo(() => (currentUser ? scopeUsers(users, currentUser) : []), [users, currentUser]);
   const visibleProjects = useMemo(() => (currentUser ? scopeProjects(projects, currentUser) : []), [projects, currentUser]);
   const visibleApprovals = useMemo(() => {
-    if (!currentUser) return [];
-    if (currentUser.role === "admin") return approvals;
-    if (currentUser.role === "head") return approvals.filter((approval) => approval.department === currentUser.department || approval.approverName === currentUser.name);
-    return approvals.filter((approval) => approval.requester === currentUser.name);
-  }, [approvals, currentUser]);
+  if (!currentUser) return [];
+
+  if (currentUser.role === "admin") {
+    return approvals;
+  }
+
+  if (currentUser.role === "head") {
+    return approvals.filter((approval) => {
+      if (approval.type === "Leave Request") {
+        return approval.department === currentUser.department || approval.requester === currentUser.name;
+      }
+
+      return (
+        approval.department === currentUser.department ||
+        approval.approverName === currentUser.name ||
+        approval.requester === currentUser.name
+      );
+    });
+  }
+
+  return approvals.filter((approval) => approval.requester === currentUser.name);
+}, [approvals, currentUser]);
   const visibleActivities = useMemo(() => {
     if (!currentUser) return [];
     if (currentUser.role === "admin") return activities;
@@ -705,6 +734,63 @@ export function AppProvider({ children }: { children: ReactNode }) {
       void db.saveApproval(newApproval);
       addStoredActivity({ user: currentUser.name, action: `sent pending info for "${task.title}"`, department: task.department, projectId: task.projectId, projectName: task.projectName, taskId: task.id, taskTitle: task.title, type: "approval", status: "pending" });
     },
+    submitLeaveRequest: (data) => {
+  const approver = headForDepartment(currentUser.department, users);
+
+  const newApproval: Approval = {
+    id: `LR-${Date.now()}`,
+    type: "Leave Request",
+    requester: currentUser.name,
+    department: currentUser.department,
+    priority: "medium",
+    status: "pending",
+    submittedAt: timestamp(),
+    purpose: `${data.leaveType} from ${data.startDate} to ${data.endDate}`,
+    reason: data.reason,
+    approverName:
+      currentUser.role === "head"
+        ? "Admin"
+        : approver?.name ?? "Team Head",
+  };
+
+  setApprovals((previous) => [newApproval, ...previous]);
+  void db.saveApproval(newApproval);
+
+  addStoredActivity({
+    user: currentUser.name,
+    action: `submitted ${data.leaveType} leave request`,
+    department: currentUser.department,
+    type: "approval",
+    status: "pending",
+  });
+
+  if (currentUser.role === "head") {
+    notify({
+      role: "admin",
+      title: "Head leave request",
+      body: `${currentUser.name} submitted a leave request`,
+      href: "/approvals",
+    });
+  } else {
+    if (approver?.id) {
+      notify({
+        userId: approver.id,
+        role: "head",
+        department: currentUser.department,
+        title: "Leave request pending",
+        body: `${currentUser.name} submitted a leave request`,
+        href: "/approvals",
+      });
+    }
+
+    notify({
+      role: "admin",
+      title: "Leave request pending",
+      body: `${currentUser.name} submitted a leave request`,
+      href: "/approvals",
+    });
+  }
+},
     submitTaskForReview: (id) => {
       const task = tasks.find((item) => item.id === id);
       if (!task) return;
@@ -740,6 +826,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     approvals: visibleApprovals,
     setApprovalStatus: (id, status, reason) => {
       const approval = approvals.find((item) => item.id === id);
+      if (approval?.type === "Leave Request" && currentUser.role !== "admin") {
+        return;
+      }
       setApprovals((previous) => previous.map((item) => {
         if (item.id !== id) return item;
         const updatedApproval = { ...item, status, response: reason ?? item.response, respondedBy: currentUser.name, respondedAt: timestamp() };

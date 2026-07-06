@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatCard } from "@/components/common/StatCard";
 import { StatusBadge, PriorityBadge } from "@/components/common/StatusBadge";
+
 import {
   Select,
   SelectContent,
@@ -33,16 +35,15 @@ export const Route = createFileRoute("/approvals")({
 
 function ApprovalsPage() {
   const {
-    approvals,
-    setApprovalStatus,
-    replyToApproval,
-    tasks,
-    submitTaskPendingInfo,
-    currentUser,
-    role,
-  } = useApp();
-
-  const canApprove = role === "admin" || role === "head";
+  approvals,
+  setApprovalStatus,
+  replyToApproval,
+  tasks,
+  submitTaskPendingInfo,
+  submitLeaveRequest,
+  currentUser,
+  role,
+} = useApp();
 
   const [tab, setTab] = useState("pending");
   const [selected, setSelected] = useState<string | null>(
@@ -51,7 +52,12 @@ function ApprovalsPage() {
   const [filterType, setFilterType] = useState("all");
   const [selectedPendingTaskId, setSelectedPendingTaskId] = useState("");
   const [pendingInfo, setPendingInfo] = useState("");
+  const [leaveType, setLeaveType] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [leaveReason, setLeaveReason] = useState("");
   const [replyText, setReplyText] = useState("");
+  const [decisionReason, setDecisionReason] = useState("");
 
   const filtered = useMemo(() => {
     return approvals.filter((approval) => {
@@ -74,6 +80,10 @@ function ApprovalsPage() {
 
   const sel =
     approvals.find((approval) => approval.id === selected) ?? filtered[0];
+
+  const isLeaveRequest = sel?.type === "Leave Request";
+  const canApprove = role === "admin" || (role === "head" && !isLeaveRequest);
+  const showLeaveRequestForm = role === "member";
 
   const pending = approvals.filter(
     (approval) => approval.status === "pending"
@@ -104,12 +114,12 @@ function ApprovalsPage() {
 
     if (!sel) return;
 
-    if ((status === "rejected" || status === "changes") && !replyText.trim()) {
-      return toast.error("Reason is required for reject or request changes");
+    if (!decisionReason.trim()) {
+      return toast.error("Enter a reason before submitting the approval decision");
     }
 
-    setApprovalStatus(sel.id, status, replyText.trim() || undefined);
-    setReplyText("");
+    setApprovalStatus(sel.id, status, decisionReason.trim());
+    setDecisionReason("");
 
     toast.success(
       `${sel.id} ${
@@ -158,6 +168,27 @@ function ApprovalsPage() {
     toast.success("Pending task information sent to approvals");
   }
 
+  function sendLeaveRequest() {
+  if (!leaveType || !startDate || !endDate || !leaveReason.trim()) {
+    return toast.error("Please fill all leave request details");
+  }
+
+  submitLeaveRequest({
+    leaveType,
+    startDate,
+    endDate,
+    reason: leaveReason.trim(),
+  });
+
+  setLeaveType("");
+  setStartDate("");
+  setEndDate("");
+  setLeaveReason("");
+  setTab("pending");
+  setFilterType("Leave Request");
+
+  toast.success("Leave request submitted for approval");
+}
   function sendReply() {
     if (!canApprove) {
       return toast.error("Team members cannot reply as approvers");
@@ -206,6 +237,84 @@ function ApprovalsPage() {
             )
           )}
         </div>
+      </Card>
+
+      <Card className="p-5">
+        <div className="mb-4">
+          <h3 className="font-semibold">Leave Request</h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            {role === "head"
+              ? "You can review leave requests from your team and track the approval workflow."
+              : "Submit a leave request for approval by your Team Head and Admin."}
+          </p>
+        </div>
+
+        {showLeaveRequestForm ? (
+          <>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label>Leave Type</Label>
+                <Select value={leaveType} onValueChange={setLeaveType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select leave type" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="Casual Leave">Casual Leave</SelectItem>
+                    <SelectItem value="Sick Leave">Sick Leave</SelectItem>
+                    <SelectItem value="Earned Leave">Earned Leave</SelectItem>
+                    <SelectItem value="Emergency Leave">Emergency Leave</SelectItem>
+                    <SelectItem value="Work From Home">Work From Home</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Approval Flow</Label>
+                <Input value="Team Head → Admin" disabled />
+              </div>
+
+              <div>
+                <Label>Start Date</Label>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(event) => setStartDate(event.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label>End Date</Label>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(event) => setEndDate(event.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <Label>Reason</Label>
+              <Textarea
+                value={leaveReason}
+                onChange={(event) => setLeaveReason(event.target.value)}
+                placeholder="Enter reason for leave..."
+                rows={4}
+              />
+            </div>
+
+            <div className="mt-5 flex justify-end">
+              <Button onClick={sendLeaveRequest}>Submit Leave Request</Button>
+            </div>
+          </>
+        ) : (
+          <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
+            <div className="font-medium text-foreground">Leave workflow for your team</div>
+            <div className="mt-2">
+              Member request → Head review → Admin final approval
+            </div>
+          </div>
+        )}
       </Card>
 
       <Card className="p-5">
@@ -374,6 +483,18 @@ function ApprovalsPage() {
                   <PriorityBadge priority={sel.priority} />
                 </div>
 
+                {sel.type === "Leave Request" && (
+                  <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-muted-foreground">Current Status</span>
+                      <StatusBadge status={sel.status} />
+                    </div>
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      Flow: Submitted → Head review → Admin approval
+                    </div>
+                  </div>
+                )}
+
                 {sel.amount && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Amount</span>
@@ -531,32 +652,45 @@ function ApprovalsPage() {
 
               {canApprove ? (
                 sel.status === "pending" || sel.status === "escalated" ? (
-                  <div className="mt-4 grid grid-cols-4 gap-2">
-                    <Button size="sm" onClick={() => act("approved")}>
-                      Approve
-                    </Button>
+                  <>
+                    <div className="mt-4">
+                      <Label>Approval Note</Label>
+                      <Textarea
+                        value={decisionReason}
+                        onChange={(event) => setDecisionReason(event.target.value)}
+                        placeholder="Enter approval rationale, rejection reason, or required changes..."
+                        rows={3}
+                        className="mt-2"
+                      />
+                    </div>
 
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => act("changes")}
-                    >
-                      Changes
-                    </Button>
+                    <div className="mt-4 grid grid-cols-4 gap-2">
+                      <Button size="sm" onClick={() => act("approved")}>
+                        Approve
+                      </Button>
 
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-destructive"
-                      onClick={() => act("rejected")}
-                    >
-                      Reject
-                    </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => act("changes")}
+                      >
+                        Changes
+                      </Button>
 
-                    <Button size="sm" variant="outline" onClick={escalate}>
-                      Escalate
-                    </Button>
-                  </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive"
+                        onClick={() => act("rejected")}
+                      >
+                        Reject
+                      </Button>
+
+                      <Button size="sm" variant="outline" onClick={escalate}>
+                        Escalate
+                      </Button>
+                    </div>
+                  </>
                 ) : (
                   <div className="mt-4">
                     <StatusBadge status={sel.status} />
