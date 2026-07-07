@@ -14,9 +14,41 @@ import { Eye, EyeOff } from "lucide-react";
 export const Route = createFileRoute("/settings")({ component: SettingsPage });
 
 function SettingsPage() {
-  const { currentUser, role } = useApp();
+  const { currentUser, role, updatePassword } = useApp();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [status, setStatus] = useState<{ type: "success" | "error" | null; message: string }>({ type: null, message: "" });
+  const [loading, setLoading] = useState(false);
+
+  async function handleUpdatePassword() {
+    setStatus({ type: null, message: "" });
+
+    if (!currentPassword.trim()) {
+      setStatus({ type: "error", message: "Please enter your current password." });
+      return;
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      setStatus({ type: "error", message: "New password must be at least 6 characters." });
+      return;
+    }
+
+    setLoading(true);
+    const result = await updatePassword(currentPassword, newPassword);
+    setLoading(false);
+
+    if (result.ok) {
+      setCurrentPassword("");
+      setNewPassword("");
+      setStatus({ type: "success", message: result.message });
+      toast.success(result.message);
+    } else {
+      setStatus({ type: "error", message: result.message });
+      toast.error(result.message);
+    }
+  }
 
   return (
     <AppLayout title="Settings" badge="Account" subtitle="Manage your workspace preferences">
@@ -61,6 +93,9 @@ function SettingsPage() {
               <Input
                 type={showCurrentPassword ? "text" : "password"}
                 className="pr-10"
+                value={currentPassword}
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                placeholder="Enter your current password"
               />
               <button
                 type="button"
@@ -78,6 +113,9 @@ function SettingsPage() {
               <Input
                 type={showNewPassword ? "text" : "password"}
                 className="pr-10"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                placeholder="Create a new password"
               />
               <button
                 type="button"
@@ -89,8 +127,14 @@ function SettingsPage() {
             </div>
           </div>
 
-          <Button onClick={() => toast.success("Password updated")}>
-            Update Password
+          {status.message ? (
+            <div className={`rounded-md border px-3 py-2 text-sm ${status.type === "success" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700" : "border-destructive/20 bg-destructive/10 text-destructive"}`}>
+              {status.message}
+            </div>
+          ) : null}
+
+          <Button onClick={handleUpdatePassword} disabled={loading}>
+            {loading ? "Updating..." : "Update Password"}
           </Button>
         </Card>
       </TabsContent>

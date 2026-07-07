@@ -87,6 +87,7 @@ function ProjectDetailPage() {
     : project.progress;
   const team = users.filter((user) => user.department === project.department && user.role !== "admin");
   const involvedTeam = team.filter((user) => allProjectTasks.some((task) => task.assigneeId === user.id || task.assignee === user.name));
+  const canViewMemberWorkflow = role === "admin" || (role === "head" && currentUser.department === project.department);
 
   const memberTaskGroups = Array.from(
     viewerProjectTasks.reduce((groups, task) => {
@@ -158,52 +159,18 @@ function ProjectDetailPage() {
         <div className="flex items-center justify-between gap-3 mb-4">
           <div>
             <h3 className="font-semibold">Members Working on This Project</h3>
-            <p className="text-xs text-muted-foreground">Member names and the tasks they handled in this project</p>
+            <p className="text-xs text-muted-foreground">Only the names of members linked to this project are shown here.</p>
           </div>
           <Badge variant="outline">{projectMemberSummaries.length} members</Badge>
         </div>
-        <div className="grid lg:grid-cols-2 gap-3">
-          {projectMemberSummaries.map((member) => {
-            const completed = member.tasks.filter((task) => task.status === "completed" || task.status === "approved").length;
-            return (
-              <div key={member.id} className="rounded-lg border p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Avatar className="size-10"><AvatarFallback className="bg-primary/10 text-primary text-xs">{member.initials}</AvatarFallback></Avatar>
-                    <div className="min-w-0">
-                      <div className="font-medium text-sm truncate">{member.name}</div>
-                      <div className="text-xs text-muted-foreground truncate">{member.title}</div>
-                    </div>
-                  </div>
-                  <Badge variant="outline">{member.tasks.length} tasks</Badge>
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                  <div><span className="text-muted-foreground">Will Do</span><div className="font-semibold text-warning">{member.tasks.filter((task) => task.status === "backlog").length}</div></div>
-                  <div><span className="text-muted-foreground">Doing</span><div className="font-semibold text-primary">{member.tasks.filter((task) => task.status !== "backlog" && task.status !== "completed" && task.status !== "approved").length}</div></div>
-                  <div><span className="text-muted-foreground">Done</span><div className="font-semibold text-success">{completed}</div></div>
-                </div>
-                <div className="mt-3 space-y-2">
-                  {member.tasks.map((task) => (
-                    <div key={task.id} className="rounded-md bg-muted/40 p-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="text-xs font-medium truncate">{task.title}</div>
-                        <StatusBadge status={task.status === "in-review" ? "in-progress" : task.status} />
-                      </div>
-                      <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                        <span className="truncate">Due {task.due}</span>
-                        <span className="font-medium text-foreground">{task.completionPercent ?? (task.status === "completed" || task.status === "approved" ? 100 : 0)}%</span>
-                      </div>
-                    </div>
-                  ))}
-                  {!member.tasks.length && <div className="rounded-md bg-muted/40 p-2 text-xs text-muted-foreground">No task records added for this member yet.</div>}
-                </div>
-              </div>
-            );
-          })}
-          {!projectMemberSummaries.length && (
-            <div className="lg:col-span-2 rounded-lg border p-4 text-center text-sm text-muted-foreground">
-              No members have tasks recorded for this project yet.
+        <div className="flex flex-wrap gap-2">
+          {projectMemberSummaries.map((member) => (
+            <div key={member.id} className="rounded-full border bg-muted/30 px-3 py-2 text-sm">
+              {member.name}
             </div>
+          ))}
+          {!projectMemberSummaries.length && (
+            <div className="text-sm text-muted-foreground">No members are assigned to this project yet.</div>
           )}
         </div>
       </Card>
@@ -551,17 +518,26 @@ function ProjectDetailPage() {
        
 
         <TabsContent value="team">
-          <Card className="p-5">
-            <h3 className="font-semibold mb-3">Project Team ({team.length || project.teamSize})</h3>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {(team.length ? team : visibleUsers).slice(0, 8).map((user) => (
-                <div key={user.id} className="flex items-center gap-3 p-3 rounded-lg border">
-                  <Avatar className="size-9"><AvatarFallback className="bg-primary/10 text-primary text-xs">{user.initials}</AvatarFallback></Avatar>
-                  <div className="min-w-0"><div className="font-medium text-sm truncate">{user.name}</div><div className="text-xs text-muted-foreground">{user.title}</div></div>
-                </div>
-              ))}
-            </div>
-          </Card>
+          {canViewMemberWorkflow ? (
+            <Card className="p-5">
+              <h3 className="font-semibold mb-3">Project Team ({team.length || project.teamSize})</h3>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {(team.length ? team : visibleUsers).slice(0, 8).map((user) => (
+                  <div key={user.id} className="flex items-center gap-3 p-3 rounded-lg border">
+                    <Avatar className="size-9"><AvatarFallback className="bg-primary/10 text-primary text-xs">{user.initials}</AvatarFallback></Avatar>
+                    <div className="min-w-0"><div className="font-medium text-sm truncate">{user.name}</div><div className="text-xs text-muted-foreground">{user.title}</div></div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          ) : (
+            <Card className="p-5">
+              <h3 className="font-semibold mb-3">Project Team</h3>
+              <div className="rounded-lg border p-4 text-sm text-muted-foreground">
+                Only admins and department heads can see the team roster and member workflow for this project.
+              </div>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="analytics">

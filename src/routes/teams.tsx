@@ -6,14 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { departments, departmentRoleOptions } from "@/data/mockData";
-import { TrendingUp, TrendingDown, Minus, UserPlus, Repeat, CalendarCheck, FileText } from "lucide-react";
+import { departments } from "@/data/mockData";
+import { TrendingUp, TrendingDown, Minus, Repeat, CalendarCheck, FileText } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { toast } from "sonner";
 import { useApp } from "@/lib/app-store";
@@ -28,21 +22,13 @@ function workloadColor(w: number) {
 }
 
 function TeamsPage() {
-  const { addUser, users, visibleUsers, currentUser, role, tasks, visibleProjects, activities } = useApp();
+  const { users, visibleUsers, currentUser, role, tasks, visibleProjects, activities } = useApp();
   const [filter, setFilter] = useState("all");
-  const [open, setOpen] = useState(false);
   const [leaveStatus, setLeaveStatus] = useState<"pending"|"approved"|"denied">("pending");
-  const defaultDepartment = role === "admin" ? departments[0].name : currentUser.department;
-  const initialRole = departmentRoleOptions[defaultDepartment]?.[0] ?? "Team Member";
-  const [memberForm, setMemberForm] = useState({ name: "", email: "", department: defaultDepartment, title: initialRole });
   const canManageTeam = role === "admin" || role === "head";
   const allowedDepartments = role === "admin" ? departments.map((d) => d.name) : [currentUser.department];
   const filtered = (filter === "all" ? departments : departments.filter(d => d.name === filter)).filter((department) => allowedDepartments.includes(department.name));
   const filterChips = ["all", ...allowedDepartments];
-  const selectedDepartment = role === "admin" ? memberForm.department : currentUser.department;
-  const selectedHeadId = departments.find((department) => department.name === selectedDepartment)?.headId;
-  const selectedHead = users.find((user) => user.id === selectedHeadId);
-  const titleOptions = departmentRoleOptions[selectedDepartment] ?? ["Team Member"];
   const activeTasks = tasks.filter((task) => task.status !== "completed" && task.status !== "approved");
   const completedTasks = tasks.filter((task) => task.status === "completed" || task.status === "approved");
   const utilization = [
@@ -55,29 +41,6 @@ function TeamsPage() {
     return { skill: department, value: deptTasks.length ? Math.round((done / deptTasks.length) * 100) : 0 };
   });
 
-  function updateMemberDepartment(department: string) {
-    setMemberForm({
-      ...memberForm,
-      department,
-      title: (departmentRoleOptions[department] ?? ["Team Member"])[0],
-    });
-  }
-
-  function submitMember() {
-    if (!memberForm.name.trim()) return toast.error("Member name is required");
-    addUser({
-      name: memberForm.name,
-      email: memberForm.email,
-      role: "member",
-      department: selectedDepartment,
-      title: memberForm.title || titleOptions[0],
-      managerId: selectedHead?.id,
-    });
-    setMemberForm({ name: "", email: "", department: defaultDepartment, title: initialRole });
-    setOpen(false);
-    toast.success("Member added");
-  }
-
   return (
     <AppLayout title="Teams & Workload" badge="Org" subtitle="Manage capacity, workload, and team rosters">
       <Card className="p-4">
@@ -87,41 +50,7 @@ function TeamsPage() {
               {c === "all" ? "All Departments" : c}
             </button>
           ))}
-        {canManageTeam && (
-          <div className="ml-auto">
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild><Button size="sm"><UserPlus className="size-4" />Add Member</Button></DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Add Team Member</DialogTitle></DialogHeader>
-                <div className="space-y-3">
-                  <div><Label>Name</Label><Input value={memberForm.name} onChange={(event)=>setMemberForm({...memberForm, name: event.target.value})} placeholder="Full name" /></div>
-                  <div><Label>Email</Label><Input value={memberForm.email} onChange={(event)=>setMemberForm({...memberForm, email: event.target.value})} type="email" placeholder="email@chimertech.com" /></div>
-                  <div><Label>Department</Label>
-                    {role === "admin" ? (
-                      <Select value={memberForm.department} onValueChange={updateMemberDepartment}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>{allowedDepartments.map((department)=><SelectItem key={department} value={department}>{department}</SelectItem>)}</SelectContent>
-                      </Select>
-                    ) : (
-                      <Input value={currentUser.department} readOnly />
-                    )}
-                  </div>
-                  <div><Label>Department Head</Label><Input value={selectedHead ? `${selectedHead.name} - ${selectedHead.title}` : "No head assigned"} readOnly /></div>
-                  <div><Label>Role / Title</Label>
-                    <Select value={memberForm.title} onValueChange={(value)=>setMemberForm({...memberForm, title: value})}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{titleOptions.map((title)=><SelectItem key={title} value={title}>{title}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button>
-                  <Button onClick={submitMember}>Add</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        )}
+        <div className="ml-auto text-xs text-muted-foreground">Only seeded admin and head accounts are available.</div>
         </div>
       </Card>
 
@@ -196,11 +125,9 @@ function TeamsPage() {
             </BarChart>
           </ResponsiveContainer>
         </Card>
-     {canManageTeam && (
-        <Card className="p-5">
+     <Card className="p-5">
           <h3 className="font-semibold mb-3">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" size="sm" onClick={()=>setOpen(true)}><UserPlus className="size-4" />Add Member</Button>
             <Button variant="outline" size="sm" onClick={()=>toast.success("Reassign panel opened")}><Repeat className="size-4" />Reassign</Button>
             <Button variant="outline" size="sm" onClick={()=>toast.success("Open Approvals to review leave requests")}><CalendarCheck className="size-4" />Approve Leave</Button>
             <Button variant="outline" size="sm" onClick={()=>toast.success("Reports opened")}><FileText className="size-4" />View Reports</Button>
@@ -220,8 +147,7 @@ function TeamsPage() {
               )}
             </div>
           </div>
-        </Card> 
-      )}
+        </Card>
       </div>
 <div>
   <h2 className="text-lg font-semibold mb-3">Team Roster</h2>

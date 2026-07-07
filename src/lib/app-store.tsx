@@ -21,7 +21,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { bootstrapSupabaseWorkspace, db, loadWorkspaceFromSupabase } from "@/lib/supabase";
+import { bootstrapSupabaseWorkspace, db, isSupabaseConfigured, loadWorkspaceFromSupabase } from "@/lib/supabase";
 
 interface LoginForm {
   mode: "signin" | "signup";
@@ -39,6 +39,7 @@ interface AppState {
   setRole: (r: Role) => void;
   currentUser: User;
   login: (profile: LoginForm) => Promise<string | null>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<{ ok: boolean; message: string }>;
   logout: () => void;
   users: User[];
   visibleUsers: User[];
@@ -89,6 +90,15 @@ const ROLE_PASSWORDS = {
 };
 
 const MEMBER_DEFAULT_PASSWORD = "user@123";
+const BLOCKED_USER_NAMES = new Set(["mm", "ani", "simbi", "silambu", "poiuytr", "akil", "remo", "reena", "ravi", "aaaa"]);
+
+function isBlockedUserName(name: string) {
+  return BLOCKED_USER_NAMES.has(name.trim().toLowerCase());
+}
+
+function sanitizeUsers(users: User[] = []) {
+  return users.filter((user) => !isBlockedUserName(user.name));
+}
 
 function timestamp() {
   return new Date().toLocaleString([], {
@@ -212,6 +222,13 @@ function loadState() {
   }
 }
 
+async function passwordMatchesUser(user: User, password: string) {
+  const passwordHash = await hashPassword(password);
+  return user.passwordHash
+    ? user.passwordHash === passwordHash || user.passwordHash === `plain:${password}`
+    : password === defaultPasswordForUser(user);
+}
+
 function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<string | null> }) {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [signIn, setSignIn] = useState({ employeeId: "", password: "" });
@@ -277,7 +294,7 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
       return;
     }
     setLoading(true);
-    const result = await onLogin({ ...form, mode: "signup", managerId: form.role === "member" ? selectedHead?.id : undefined });
+    const result = await onLogin({ ...form, mode: "signup", managerId: selectedHead?.id });
     setLoading(false);
     if (result) setError(result);
   }
@@ -303,14 +320,11 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
             <>
               <div>
                 <Label>Employee ID</Label>
-                <Input value={signIn.employeeId} onChange={(event) => setSignIn({ ...signIn, employeeId: event.target.value })} placeholder="EMP010" autoComplete="username" />
+                <Input value={signIn.employeeId} onChange={(event) => setSignIn({ ...signIn, employeeId: event.target.value })} placeholder="ADM001" autoComplete="username" />
               </div>
               <div>
                 <Label>Password</Label>
                 <Input type="password" value={signIn.password} onChange={(event) => setSignIn({ ...signIn, password: event.target.value })} placeholder="Enter password" autoComplete="current-password" />
-              </div>
-              <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-                Default admin: ADM001 / admin@123. Existing members use EMP plus their user number, for example EMP010 / user@123.
               </div>
             </>
           ) : (
@@ -327,11 +341,7 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
               </div>
               <div>
                 <Label>Name</Label>
-                <Input
-                  value={form.name}
-                  onChange={(event) => setForm({ ...form, name: event.target.value })}
-                  placeholder={form.role === "head" ? selectedHead?.name ?? "Department head" : "Enter your full name"}
-                />
+                <Input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Enter your full name" />
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
                 <div>
@@ -341,14 +351,13 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
                     setForm({
                       ...form,
                       role: nextRole,
-                      title: nextRole === "admin" ? "Administrator" : nextRole === "head" ? `${form.department} Head` : roleOptionsFor(form.department)[0],
+                      title: "Team Member",
                       managerId: nextRole === "member" ? selectedHead?.id : undefined,
                     });
                   }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="member">Team Member</SelectItem>
-                      <SelectItem value="head">Department Head</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -371,13 +380,6 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
                 <Label>Department Head</Label>
                 <Input value={selectedHead ? `${selectedHead.name} - ${selectedHead.title}` : "No head assigned"} readOnly />
               </div>
-
-              <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
-                <div className="font-medium text-foreground">Admin account is preconfigured</div>
-                <div className="mt-2">Name: Dr. Ragul</div>
-                <div>Employee ID: ADM001</div>
-                <div>Password: admin@123</div>
-              </div>
             </>
           )}
           {error && <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div>}
@@ -392,8 +394,8 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const stored = loadState();
-  const [currentUser, setCurrentUser] = useState<User | null>(stored?.currentUser ?? null);
-  const [users, setUsers] = useState<User[]>((stored?.users ?? seedUsers).map(withDefaultCredentials));
+  const [currentUser, setCurrentUser] = useState<User | null>(stored?.currentUser && !isBlockedUserName(stored.currentUser.name) ? stored.currentUser : null);
+  const [users, setUsers] = useState<User[]>(sanitizeUsers(stored?.users ?? seedUsers));
   const [projects, setProjects] = useState<Project[]>(stored?.projects ?? seedProjects);
 
   const [tasks, setTasks] = useState<Task[]>((stored?.tasks?.length ? stored.tasks : seedTasks).map(hydrateTask));
@@ -419,22 +421,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!data || cancelled) return;
 
       if (!data.users.length && !data.projects.length) {
-        const defaultUsers = seedUsers.map(withDefaultCredentials);
+        const defaultUsers = sanitizeUsers(seedUsers.map(withDefaultCredentials));
         await bootstrapSupabaseWorkspace(defaultUsers, seedDepartments, seedProjects);
         if (!cancelled) {
           setUsers(defaultUsers);
           setProjects(seedProjects);
-
           setTasks(seedTasks.map(hydrateTask));
-
         }
         return;
       }
 
-      setUsers((data.users.length ? data.users : seedUsers).map(withDefaultCredentials));
-      setProjects(data.projects.length ? data.projects : seedProjects);
-
-      setTasks((data.tasks.length ? data.tasks : seedTasks).map(hydrateTask));
+      if (!cancelled) {
+        setUsers(sanitizeUsers((data.users.length ? data.users : seedUsers).map(withDefaultCredentials)));
+        setProjects(data.projects.length ? data.projects : seedProjects);
+        setTasks((data.tasks.length ? data.tasks : seedTasks).map(hydrateTask));
+      }
 
       setApprovals(data.approvals);
       setActivities(data.activities);
@@ -448,8 +449,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !currentUser) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentUser, users, projects, tasks, approvals, activities, notifications }));
+    if (typeof window === "undefined") return;
+    const safeCurrentUser = currentUser && !isBlockedUserName(currentUser.name) ? currentUser : null;
+    const safeUsers = sanitizeUsers(users);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentUser: safeCurrentUser, users: safeUsers, projects, tasks, approvals, activities, notifications }));
   }, [currentUser, users, projects, tasks, approvals, activities, notifications]);
 
   const visibleTasks = useMemo(() => (currentUser ? scopeTasks(tasks, currentUser) : []), [tasks, currentUser]);
@@ -513,15 +516,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!existing) return "Employee ID was not found.";
 
       const passwordHash = await hashPassword(profile.password);
-      const validPassword = existing.passwordHash
-        ? existing.passwordHash === passwordHash || existing.passwordHash === `plain:${profile.password}`
-        : profile.password === defaultPasswordForUser(existing);
+      const validPassword = await passwordMatchesUser(existing, profile.password);
 
       if (!validPassword) return "Password is incorrect.";
 
       const user = { ...existing, employeeId, passwordHash: existing.passwordHash ?? passwordHash };
       setUsers((previous) => previous.map((item) => item.id === user.id ? user : item));
-      await db.saveUser(user);
+      if (isSupabaseConfigured) {
+        const saveResult = await db.saveUser(user);
+        if (!saveResult.ok) return `Account was not saved in Supabase: ${saveResult.error}`;
+      }
       setCurrentUser(user);
       addStoredActivity({ user: user.name, action: "logged in to the workspace", department: user.department, type: "login" });
       return null;
@@ -537,16 +541,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       employeeId,
       name,
       email: emailFor(name),
-      role: profile.role,
-      department: profile.role === "admin" ? "Founder's Office" : profile.department,
-      title: profile.title || (profile.role === "head" ? "Department Head" : profile.role === "admin" ? "Administrator" : "Team Member"),
+      role: "member",
+      department: profile.department,
+      title: profile.title || "Team Member",
       initials: initials(name),
-      managerId: profile.role === "member" ? (profile.managerId ?? headForDepartment(profile.department, users)?.id) : undefined,
+      managerId: profile.managerId ?? headForDepartment(profile.department, users)?.id,
       passwordHash: await hashPassword(profile.password),
     };
 
-    const saveResult = await db.saveUser(user);
-    if (!saveResult.ok) return `Account was not saved in Supabase: ${saveResult.error}`;
+    if (isSupabaseConfigured) {
+      const saveResult = await db.saveUser(user);
+      if (!saveResult.ok) return `Account was not saved in Supabase: ${saveResult.error}`;
+    }
 
     setUsers((previous) => [user, ...previous]);
     setCurrentUser(user);
@@ -556,23 +562,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   if (!currentUser) return <LoginScreen onLogin={login} />;
 
+  async function updatePassword(currentPassword: string, newPassword: string) {
+    if (!currentUser) return { ok: false, message: "You need to be signed in to change your password." };
+    if (!currentPassword.trim()) return { ok: false, message: "Please enter your current password." };
+    if (!newPassword || newPassword.length < 6) return { ok: false, message: "New password must be at least 6 characters." };
+
+    const currentMatches = await passwordMatchesUser(currentUser, currentPassword);
+    if (!currentMatches) return { ok: false, message: "Current password is incorrect." };
+
+    const passwordHash = await hashPassword(newPassword);
+    const updatedUser = { ...currentUser, passwordHash };
+
+    setUsers((previous) => previous.map((user) => user.id === currentUser.id ? updatedUser : user));
+    setCurrentUser(updatedUser);
+
+    if (isSupabaseConfigured) {
+      const saveResult = await db.saveUser(updatedUser);
+      if (!saveResult.ok) return { ok: false, message: `Password could not be saved: ${saveResult.error}` };
+    }
+
+    addStoredActivity({ user: updatedUser.name, action: "updated account password", department: updatedUser.department, type: "login" });
+    return { ok: true, message: "Password updated successfully. Your new password is now active." };
+  }
+
   const value: AppState = {
     role: currentUser.role,
     setRole: (role) => setCurrentUser((user) => user ? { ...user, role } : user),
     currentUser,
     login,
+    updatePassword,
     logout: () => {
       if (typeof window !== "undefined") window.localStorage.removeItem(STORAGE_KEY);
       setCurrentUser(null);
     },
     users,
     visibleUsers,
-    addUser: (user) => {
-      const id = `u-${Date.now()}`;
-      const newUser = { ...user, id, employeeId: user.employeeId ?? defaultEmployeeId({ id, role: user.role }), email: user.email ?? emailFor(user.name), initials: initials(user.name) };
-      setUsers((previous) => [newUser, ...previous]);
-      void db.saveUser(newUser);
-      addStoredActivity({ user: currentUser.name, action: `added ${newUser.name} to ${newUser.department}`, department: newUser.department, type: "user" });
+    addUser: () => {
+      addStoredActivity({ user: currentUser.name, action: "attempted to add a user outside the preconfigured accounts", department: currentUser.department, type: "user" });
     },
     projects,
     visibleProjects,
