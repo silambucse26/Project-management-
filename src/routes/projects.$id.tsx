@@ -131,13 +131,21 @@ function ProjectDetailPage() {
   const projectHead = users.find((user) => user.id === project.ownerId) ?? users.find((user) => user.name === project.owner);
   const taskTimeline = allProjectTasks.slice(0, 8);
   const projectActivity = allProjectTasks
-    .flatMap((task) => [
-      task.registeredAt ? { id: `${task.id}-created`, label: `Task created: ${task.title}`, time: task.registeredAt } : null,
-      task.updatedAt ? { id: `${task.id}-updated`, label: `Task updated: ${task.title}`, time: task.updatedAt } : null,
-      task.approvalStatus === "pending" ? { id: `${task.id}-submitted`, label: `Task submitted: ${task.title}`, time: task.updatedAt ?? task.registeredAt ?? "Just now" } : null,
-      task.approvalStatus === "approved" ? { id: `${task.id}-approved`, label: `Task approved: ${task.title}`, time: task.completedAt ?? task.updatedAt ?? "Just now" } : null,
-    ])
-    .filter(Boolean) as { id: string; label: string; time: string }[];
+      .flatMap((task) => [
+        task.registeredAt
+          ? { id: `${task.id}-created`, label: `Task created: ${task.title} by ${task.assignee}`, time: task.registeredAt, user: task.assignee }
+          : null,
+        task.updatedAt
+          ? { id: `${task.id}-updated`, label: `Task updated: ${task.title} by ${task.assignee}`, time: task.updatedAt, user: task.assignee }
+          : null,
+        task.approvalStatus === "pending"
+          ? { id: `${task.id}-submitted`, label: `Task submitted: ${task.title} by ${task.assignee}`, time: task.updatedAt ?? task.registeredAt ?? "Just now", user: task.assignee }
+          : null,
+        task.approvalStatus === "approved"
+          ? { id: `${task.id}-approved`, label: `Task approved: ${task.title} by ${task.assignee}`, time: task.completedAt ?? task.updatedAt ?? "Just now", user: task.assignee }
+          : null,
+      ])
+      .filter(Boolean) as { id: string; label: string; time: string; user: string }[];
 
   return (
     <AppLayout title={project.name} badge="Project" subtitle={project.description ?? `${project.department} project details`}>
@@ -561,7 +569,11 @@ function ProjectDetailPage() {
         <div className="space-y-3 mb-4">
           {projectActivity.slice(0, 8).map((item) => (
             <div key={item.id} className="flex gap-3">
-              <Avatar className="size-8 shrink-0"><AvatarFallback className="text-xs bg-muted">PM</AvatarFallback></Avatar>
+              <Avatar className="size-8 shrink-0">
+                <AvatarFallback className="text-xs bg-muted">
+                  {item.user.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
               <div className="flex-1 bg-muted/40 rounded-lg p-3">
                 <div className="text-sm">{item.label}</div>
                 <div className="text-[11px] text-muted-foreground mt-1">{item.time}</div>

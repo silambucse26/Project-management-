@@ -125,29 +125,47 @@ function TeamsPage() {
             </BarChart>
           </ResponsiveContainer>
         </Card>
-     <Card className="p-5">
-          <h3 className="font-semibold mb-3">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" size="sm" onClick={()=>toast.success("Reassign panel opened")}><Repeat className="size-4" />Reassign</Button>
-            <Button variant="outline" size="sm" onClick={()=>toast.success("Open Approvals to review leave requests")}><CalendarCheck className="size-4" />Approve Leave</Button>
-            <Button variant="outline" size="sm" onClick={()=>toast.success("Reports opened")}><FileText className="size-4" />View Reports</Button>
-          </div>
-          <div className="mt-5 pt-5 border-t">
-            <h4 className="font-semibold text-sm mb-2">Pending Approval</h4>
-            <div className="p-3 rounded-lg border">
-              <div className="text-sm font-medium">Leave Requests</div>
-              <div className="text-xs text-muted-foreground">Use Approvals for pending leave requests.</div>
-              {leaveStatus === "pending" ? (
-                <div className="flex gap-2 mt-2">
-                  <Button size="sm" className="flex-1" onClick={()=>{setLeaveStatus("approved"); toast.success("Leave approved");}}>Approve</Button>
-                  <Button size="sm" variant="outline" className="flex-1" onClick={()=>{setLeaveStatus("denied"); toast.error("Leave denied");}}>Deny</Button>
-                </div>
-              ) : (
-                <Badge className="mt-2" variant="outline">{leaveStatus}</Badge>
-              )}
+     {canManageTeam && (
+      <Card className="p-5">
+        <h3 className="font-semibold mb-3">Quick Actions</h3>
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="outline" size="sm" onClick={() => toast.success("Reassign panel opened")}>
+            <Repeat className="size-4" />Reassign
+          </Button>
+
+          <Button variant="outline" size="sm" onClick={() => toast.success("Open Approvals to review leave requests")}>
+            <CalendarCheck className="size-4" />Approve Leave
+          </Button>
+
+          <Button variant="outline" size="sm" onClick={() => toast.success("Reports opened")}>
+            <FileText className="size-4" />View Reports
+          </Button>
+        </div>
+
+        <div className="mt-5 pt-5 border-t">
+          <h4 className="font-semibold text-sm mb-2">Pending Approval</h4>
+          <div className="p-3 rounded-lg border">
+            <div className="text-sm font-medium">Leave Requests</div>
+            <div className="text-xs text-muted-foreground">
+              Use Approvals for pending leave requests.
             </div>
+
+            {leaveStatus === "pending" ? (
+              <div className="flex gap-2 mt-2">
+                <Button size="sm" className="flex-1" onClick={() => { setLeaveStatus("approved"); toast.success("Leave approved"); }}>
+                  Approve
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => { setLeaveStatus("denied"); toast.error("Leave denied"); }}>
+                  Deny
+                </Button>
+              </div>
+            ) : (
+              <Badge className="mt-2" variant="outline">{leaveStatus}</Badge>
+            )}
           </div>
-        </Card>
+        </div>
+      </Card>
+)}
       </div>
 <div>
   <h2 className="text-lg font-semibold mb-3">Team Roster</h2>

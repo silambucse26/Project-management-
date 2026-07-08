@@ -80,14 +80,15 @@ function TasksPage() {
   const [progressValue, setProgressValue] = useState("25");
   const assignableUsers = visibleUsers.filter((user) => user.role === "member" || user.id === currentUser.id);
   const [form, setForm] = useState({ projectName: "", title: "", desc: "", assigneeId: "", reviewerId: "", priority: "medium" as Task["priority"], status: "backlog" as Task["status"], startDate: todayISO(), due: "" });
-
+  const[selectedStatus, setSelectedStatus] = useState<Task["status"]>("backlog");
   const grouped = useMemo(() => {
     const g: Record<string, Task[]> = {};
     columns.forEach(c => g[c.id] = []);
     tasks.forEach(t => g[t.status]?.push(t));
     return g;
   }, [tasks]);
-
+  const selectedColumn = columns.find((col) => col.id ===selectedStatus);
+  const selectedTasks = grouped[selectedStatus] ?? []
   const delayedTasks = tasks.filter(isDelayed);
   const criticalTasks = tasks.filter(t => t.status !== "completed" && t.priority === "critical").length;
   const due = tasks.filter(t => t.status !== "completed" && t.status !== "approved").length;
@@ -239,7 +240,20 @@ function TasksPage() {
           </SheetContent>
         </Sheet>
       </div>
-
+      <div className="flex flex-wrap gap-2">
+        {columns.map((col) => (
+          <Button
+            key={col.id}
+            variant={selectedStatus === col.id ? "default" : "outline"}
+            onClick={() => setSelectedStatus(col.id)}
+          >
+            {col.label}
+            <Badge variant="secondary" className="ml-2">
+              {grouped[col.id].length}
+            </Badge>
+          </Button>
+        ))}
+      </div>
       <Dialog open={dueOpen} onOpenChange={setDueOpen}>
         <DialogContent>
           <DialogHeader>
@@ -390,84 +404,84 @@ function TasksPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-  <div className="space-y-4">
-    {columns.map((col) => (
-      <Card key={col.id} className="overflow-hidden">
-        <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
-         <div className="flex items-center gap-2">
-           <div className={'size-2 rounded-full ${col.color}'} />
-           <h3  className="font-semibold">{col.label}</h3>
-           </div>
-           <Badge variant="outline">
-            {grouped[col.id].length}tasks
-            </Badge>
-           </div>
+  <Card className="overflow-hidden">
+  <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
+    <h3 className="font-semibold">{selectedColumn?.label}</h3>
+    <Badge variant="outline">{selectedTasks.length} tasks</Badge>
+  </div>
 
-           {grouped[col.id].length == 0 ? (
-            <div className="p-6 text-sm text -muted-foreground">
-              No tasks in {col.label}
+  {selectedTasks.length === 0 ? (
+    <div className="p-6 text-sm text-muted-foreground">
+      No tasks in {selectedColumn?.label}
+    </div>
+  ) : (
+    <div className="divide-y">
+      {selectedTasks.map((t) => {
+        const progress =
+          t.completionPercent ??
+          (t.status === "completed" || t.status === "approved" ? 100 : 0);
+
+        const delayed = isDelayed(t);
+
+        return (
+          <div
+            key={t.id}
+            className="grid grid-cols-1 gap-3 px-4 py-4 hover:bg-muted/30 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]"
+          >
+            <div>
+              <div className="font-medium">{t.title}</div>
+              <div className="text-xs text-muted-foreground">{t.projectName}</div>
             </div>
-           )  :  (
-            <div className="divide-y">
-              {grouped[col.id].map((t) => {
-                 const progress =
-                  t.completionPercent ??
-                  (t.status == "completed" || t.status === "approved" ? 100 : 0);
-                const delayed = isDelayed(t);
-                return (
-                   <div 
-                    key={t.id}
-                    className="grid grid-cols-1 gap-3 px-4 py-4 hover:bg-muted/30 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]"
-                    >
-                      <div>
-                        <div className="font-medium">{t.title}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {t.projectName}
-                        </div>
-                      </div>
-                      <div className="text-sm">{t.department}</div>
-                      <PriorityBadge priority={t.priority} />
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium">{progress}%</div>
-                        <progress value={progress} className="h-1.5" />
-                      </div>
-                      <div
-                  className={`text-sm ${
-                    delayed ? "font-semibold text-destructive" : ""
-                  }`}
+
+            <div className="text-sm">{t.department}</div>
+            <PriorityBadge priority={t.priority} />
+
+            <div className="space-y-1">
+              <div className="text-sm font-medium">{progress}%</div>
+              <Progress value={progress} className="h-1.5" />
+            </div>
+
+            <div className={`text-sm ${delayed ? "font-semibold text-destructive" : ""}`}>
+              {displayDueDate(t.due)}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={() => openTaskDetails(t)}>
+                View
+              </Button>
+
+              {t.approvalStatus !== "pending" && t.approvalStatus !== "approved" && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    submitTaskForReview(t.id);
+                    toast.success("Submitted for review");
+                  }}
                 >
-                  {displayDueDate(t.due)}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" onClick={() => openTaskDetails(t)}>View</Button>
+                  Submit
+                </Button>
+              )}
 
-                  {t.approvalStatus !== "pending" && t.approvalStatus !== "approved" && (
-                    <Button size="sm" variant="ghost" onClick={() => { submitTaskForReview(t.id); toast.success("Submitted for review"); }}>
-                      Submit
-                    </Button>
-                  )}
-
-                  {currentUser?.role === "head" && (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => {
-                        if (!confirm(`Delete task "${t.title}"? This cannot be undone.`)) return;
-                        void deleteTask(t.id);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </Card>
-  ))}
-</div>
+              {currentUser?.role === "head" && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => {
+                    if (!confirm(`Delete task "${t.title}"? This cannot be undone.`)) return;
+                    void deleteTask(t.id);
+                  }}
+                >
+                  Delete
+                </Button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  )}
+</Card>
     </AppLayout>
   );
 }
