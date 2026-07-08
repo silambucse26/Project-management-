@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { BriefcaseBusiness, LogIn } from "lucide-react";
+import { BriefcaseBusiness, LogIn, Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 import {
   type Task,
   type Approval,
@@ -51,6 +52,7 @@ interface AppState {
   tasks: Task[];
   allTasks: Task[];
   addTask: (t: Omit<Task, "id">) => void;
+  deleteTask: (id: string) => Promise<void>;
   updateTaskStatus: (id: string, status: Task["status"]) => void;
   updateTaskDetails: (id: string, updates: Partial<Pick<Task, "completionPercent" | "pendingReason" | "delayReason" | "startDate" | "due">>) => void;
   submitTaskDelayReason: (id: string, reason: string) => void;
@@ -244,6 +246,8 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const departments = seedDepartments.map((department) => department.name);
   const selectedHead = headForDepartment(form.department);
   const titleOptions = form.role === "head" ? [`${form.department} Head`] : roleOptionsFor(form.department);
@@ -335,9 +339,33 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
                   <Input value={form.employeeId} onChange={(event) => setForm({ ...form, employeeId: normalizeEmployeeId(event.target.value) })} placeholder="EMP030" autoComplete="username" />
                 </div>
                 <div>
-                  <Label>Password</Label>
-                  <Input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} placeholder="Create password" autoComplete="new-password" />
+                <Label>Password</Label>
+
+                <div className="relative">
+                  <Input
+                    type={showSignInPassword ? "text" : "password"}
+                    value={signIn.password}
+                    onChange={(event) =>
+                      setSignIn({ ...signIn, password: event.target.value })
+                    }
+                    placeholder="Enter password"
+                    autoComplete="current-password"
+                    className="pr-10"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowSignInPassword(!showSignInPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  >
+                    {showSignInPassword ? (
+                      <EyeOff size={18} />
+                    ) : (
+                      <Eye size={18} />
+                    )}
+                  </button>
                 </div>
+              </div>
               </div>
               <div>
                 <Label>Name</Label>
@@ -654,6 +682,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notify({ userId: reviewer.id, role: "head", department: project.department, title: "Task created", body: `${newTask.title} was created in ${project.name}`, href: "/tasks" });
       }
       notify({ role: "admin", title: "Task created", body: `${currentUser.name} created "${newTask.title}"`, href: "/tasks" });
+    },
+    deleteTask: async (id: string) => {
+      if (!currentUser) return;
+      if (currentUser.role !== "head") {
+        toast.error("Only department heads can delete tasks.");
+        return;
+      }
+      const task = tasks.find((t) => t.id === id);
+      // optimistic remove
+      setTasks((previous) => previous.filter((t) => t.id !== id));
+      const res = await db.deleteTask(id);
+      if (!res.ok) {
+        toast.error(res.error ?? "Failed to delete task");
+        // revert
+        if (task) setTasks((prev) => [task, ...prev]);
+        return;
+      }
+      addStoredActivity({ user: currentUser.name, action: `deleted task "${task?.title ?? id}"`, department: task?.department, projectId: task?.projectId, projectName: task?.projectName, taskId: id, taskTitle: task?.title, type: "task" });
+      toast.success("Task deleted");
     },
     updateTaskStatus: (id, status) => {
       setTasks((previous) => previous.map((task) => {

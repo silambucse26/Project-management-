@@ -305,6 +305,16 @@ async function upsert(table: string, row: Record<string, unknown>): Promise<Save
   return { ok: true };
 }
 
+async function deleteFrom(table: string, id: string): Promise<SaveResult> {
+  if (!supabase) return { ok: false, error: supabaseConfigError };
+  const { error } = await supabase.from(table).delete().eq("id", id);
+  if (error) {
+    console.error(`Supabase ${table} delete failed`, error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}
+
 export async function loadWorkspaceFromSupabase(): Promise<WorkspaceData | null> {
   if (!supabase) return null;
   const [usersRes, departmentsRes, projectsRes, tasksRes, approvalsRes, activitiesRes, notificationsRes] = await Promise.all([
@@ -347,6 +357,7 @@ export const db = {
   saveUser: (user: User) => upsert("pm_users", userRow(user)),
   saveProject: (project: Project) => upsert("pm_projects", projectRow(project)),
   saveTask: (task: Task) => upsert("pm_tasks", taskRow(task)),
+  deleteTask: (id: string) => deleteFrom("pm_tasks", id),
   saveApproval: (approval: Approval) => upsert("pm_approvals", approvalRow(approval)),
   saveActivity: (activity: Activity) => upsert("pm_activities", activityRow(activity)),
   saveNotification: (notification: Notification) => upsert("pm_notifications", notificationRow(notification)),

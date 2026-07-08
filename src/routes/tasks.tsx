@@ -70,7 +70,7 @@ function todayISO() {
 }
 
 function TasksPage() {
-  const { tasks, addTask, updateTaskStatus, updateTaskDetails, submitTaskDelayReason, submitTaskForReview, visibleUsers, currentUser, role, visibleProjects, addProject, findProjectByName } = useApp();
+  const { tasks, addTask, updateTaskStatus, updateTaskDetails, submitTaskDelayReason, submitTaskForReview, visibleUsers, currentUser, role, visibleProjects, addProject, findProjectByName, deleteTask } = useApp();
   const [open, setOpen] = useState(false);
   const [dueOpen, setDueOpen] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
@@ -439,27 +439,26 @@ function TasksPage() {
                   {displayDueDate(t.due)}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openTaskDetails(t)}
-                  >
-                    View
-                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => openTaskDetails(t)}>View</Button>
 
-                  {t.approvalStatus !== "pending" &&
-                    t.approvalStatus !== "approved" && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          submitTaskForReview(t.id);
-                          toast.success("Submitted for review");
-                        }}
-                      >
-                        Submit
-                      </Button>
-                    )}
+                  {t.approvalStatus !== "pending" && t.approvalStatus !== "approved" && (
+                    <Button size="sm" variant="ghost" onClick={() => { submitTaskForReview(t.id); toast.success("Submitted for review"); }}>
+                      Submit
+                    </Button>
+                  )}
+
+                  {currentUser?.role === "head" && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => {
+                        if (!confirm(`Delete task "${t.title}"? This cannot be undone.`)) return;
+                        void deleteTask(t.id);
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </div>
               </div>
             );
