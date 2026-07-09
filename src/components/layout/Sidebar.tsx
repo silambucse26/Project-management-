@@ -15,6 +15,8 @@ const adminNav = [
   { to: "/approvals", label: "Approvals", icon: CheckCircle2 },
   { to: "/reports", label: "Reports", icon: FileText },
   { to: "/reports", label: "Analytics", icon: BarChart3 },
+  { to: "/messages", label: "Messages", icon: MessageSquare },
+  { to: "/help-center", label: "Help Center", icon: HelpCircle },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -26,14 +28,31 @@ const memberNav = [
   { to: "/approvals", label: "Approvals", icon: CheckCircle2 },
   { to: "/reports", label: "Reports", icon: FileText },
   { to: "/messages", label: "Messages", icon: MessageSquare },
-  { to: "/my-work", label: "Help Center", icon: HelpCircle },
+  { to: "/help-center", label: "Help Center", icon: HelpCircle },
+  { to: "/settings", label: "Settings", icon: Settings },
+];
+
+const headNav = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/projects", label: "Projects", icon: FolderKanban },
+  { to: "/tasks", label: "Tasks", icon: ListChecks },
+  { to: "/teams", label: "Teams", icon: Users },
+  { to: "/approvals", label: "Approvals", icon: CheckCircle2 },
+  { to: "/reports", label: "Reports", icon: FileText },
+  { to: "/messages", label: "Messages", icon: MessageSquare },
+  { to: "/help-center", label: "Help Center", icon: HelpCircle },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar() {
   const { role } = useApp();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const items = role === "member" ? memberNav : adminNav;
+  const items =
+  role === "admin"
+    ? adminNav
+    : role === "head"
+    ? headNav
+    : memberNav;
 
   return (
     <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r bg-sidebar h-screen sticky top-0">

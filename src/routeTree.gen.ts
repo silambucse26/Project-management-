@@ -16,6 +16,7 @@ import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as MyWorkRouteImport } from './routes/my-work'
 import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as HelpCenterRouteImport } from './routes/help-center'
 import { Route as DepartmentsRouteImport } from './routes/departments'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
@@ -57,6 +58,11 @@ const MessagesRoute = MessagesRouteImport.update({
   path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpCenterRoute = HelpCenterRouteImport.update({
+  id: '/help-center',
+  path: '/help-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DepartmentsRoute = DepartmentsRouteImport.update({
   id: '/departments',
   path: '/departments',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/departments': typeof DepartmentsRoute
+  '/help-center': typeof HelpCenterRoute
   '/messages': typeof MessagesRoute
   '/my-work': typeof MyWorkRoute
   '/projects': typeof ProjectsRouteWithChildren
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/departments': typeof DepartmentsRoute
+  '/help-center': typeof HelpCenterRoute
   '/messages': typeof MessagesRoute
   '/my-work': typeof MyWorkRoute
   '/projects': typeof ProjectsRouteWithChildren
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/departments': typeof DepartmentsRoute
+  '/help-center': typeof HelpCenterRoute
   '/messages': typeof MessagesRoute
   '/my-work': typeof MyWorkRoute
   '/projects': typeof ProjectsRouteWithChildren
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/dashboard'
     | '/departments'
+    | '/help-center'
     | '/messages'
     | '/my-work'
     | '/projects'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/dashboard'
     | '/departments'
+    | '/help-center'
     | '/messages'
     | '/my-work'
     | '/projects'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/dashboard'
     | '/departments'
+    | '/help-center'
     | '/messages'
     | '/my-work'
     | '/projects'
@@ -176,6 +188,7 @@ export interface RootRouteChildren {
   ApprovalsRoute: typeof ApprovalsRoute
   DashboardRoute: typeof DashboardRoute
   DepartmentsRoute: typeof DepartmentsRoute
+  HelpCenterRoute: typeof HelpCenterRoute
   MessagesRoute: typeof MessagesRoute
   MyWorkRoute: typeof MyWorkRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
@@ -236,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/help-center': {
+      id: '/help-center'
+      path: '/help-center'
+      fullPath: '/help-center'
+      preLoaderRoute: typeof HelpCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/departments': {
       id: '/departments'
       path: '/departments'
@@ -291,6 +311,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApprovalsRoute: ApprovalsRoute,
   DashboardRoute: DashboardRoute,
   DepartmentsRoute: DepartmentsRoute,
+  HelpCenterRoute: HelpCenterRoute,
   MessagesRoute: MessagesRoute,
   MyWorkRoute: MyWorkRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
