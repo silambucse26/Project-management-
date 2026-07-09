@@ -25,7 +25,7 @@ const memberNav = [
   { to: "/teams", label: "Teams", icon: Users },
   { to: "/approvals", label: "Approvals", icon: CheckCircle2 },
   { to: "/reports", label: "Reports", icon: FileText },
-  { to: "/my-work", label: "Messages", icon: MessageSquare },
+  { to: "/messages", label: "Messages", icon: MessageSquare },
   { to: "/my-work", label: "Help Center", icon: HelpCircle },
   { to: "/settings", label: "Settings", icon: Settings },
 ];

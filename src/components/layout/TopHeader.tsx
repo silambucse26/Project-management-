@@ -1,6 +1,7 @@
 import { Bell, Calendar, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -27,7 +28,7 @@ interface Props {
 
 export function TopHeader({ title, subtitle, badge }: Props) {
   const { role, currentUser, logout, unreadNotifications, notifications, markNotificationRead } = useApp();
-
+  const navigate = useNavigate();
   return (
     <header className="sticky top-0 z-30 bg-background/85 backdrop-blur border-b">
       <div className="flex h-16 items-center gap-3 px-4 md:px-6">
@@ -90,8 +91,10 @@ export function TopHeader({ title, subtitle, badge }: Props) {
               <div className="text-xs font-normal text-muted-foreground">{currentUser.title} - {currentUser.department}</div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile Settings</DropdownMenuItem>
-            <DropdownMenuItem onClick={logout}>Sign out</DropdownMenuItem>
+           <DropdownMenuItem onClick={() => navigate({ to: "/settings" })}>
+              Profile Settings
+           </DropdownMenuItem>
+           <DropdownMenuItem onClick={logout}>Sign out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

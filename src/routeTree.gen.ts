@@ -15,6 +15,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as MyWorkRouteImport } from './routes/my-work'
+import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as DepartmentsRouteImport } from './routes/departments'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
@@ -51,6 +52,11 @@ const MyWorkRoute = MyWorkRouteImport.update({
   path: '/my-work',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DepartmentsRoute = DepartmentsRouteImport.update({
   id: '/departments',
   path: '/departments',
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/departments': typeof DepartmentsRoute
+  '/messages': typeof MessagesRoute
   '/my-work': typeof MyWorkRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/reports': typeof ReportsRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/departments': typeof DepartmentsRoute
+  '/messages': typeof MessagesRoute
   '/my-work': typeof MyWorkRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/reports': typeof ReportsRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/departments': typeof DepartmentsRoute
+  '/messages': typeof MessagesRoute
   '/my-work': typeof MyWorkRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/reports': typeof ReportsRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/dashboard'
     | '/departments'
+    | '/messages'
     | '/my-work'
     | '/projects'
     | '/reports'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/dashboard'
     | '/departments'
+    | '/messages'
     | '/my-work'
     | '/projects'
     | '/reports'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/dashboard'
     | '/departments'
+    | '/messages'
     | '/my-work'
     | '/projects'
     | '/reports'
@@ -164,6 +176,7 @@ export interface RootRouteChildren {
   ApprovalsRoute: typeof ApprovalsRoute
   DashboardRoute: typeof DashboardRoute
   DepartmentsRoute: typeof DepartmentsRoute
+  MessagesRoute: typeof MessagesRoute
   MyWorkRoute: typeof MyWorkRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
   ReportsRoute: typeof ReportsRoute
@@ -214,6 +227,13 @@ declare module '@tanstack/react-router' {
       path: '/my-work'
       fullPath: '/my-work'
       preLoaderRoute: typeof MyWorkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/departments': {
@@ -271,6 +291,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApprovalsRoute: ApprovalsRoute,
   DashboardRoute: DashboardRoute,
   DepartmentsRoute: DepartmentsRoute,
+  MessagesRoute: MessagesRoute,
   MyWorkRoute: MyWorkRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
   ReportsRoute: ReportsRoute,
