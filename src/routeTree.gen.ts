@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeamsRouteImport } from './routes/teams'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as MyWorkRouteImport } from './routes/my-work'
@@ -36,6 +37,11 @@ const TasksRoute = TasksRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportsRoute = ReportsRouteImport.update({
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/my-work': typeof MyWorkRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/reports': typeof ReportsRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
   '/teams': typeof TeamsRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/my-work': typeof MyWorkRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/reports': typeof ReportsRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
   '/teams': typeof TeamsRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/my-work': typeof MyWorkRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/reports': typeof ReportsRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
   '/teams': typeof TeamsRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/my-work'
     | '/projects'
     | '/reports'
+    | '/search'
     | '/settings'
     | '/tasks'
     | '/teams'
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/my-work'
     | '/projects'
     | '/reports'
+    | '/search'
     | '/settings'
     | '/tasks'
     | '/teams'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/my-work'
     | '/projects'
     | '/reports'
+    | '/search'
     | '/settings'
     | '/tasks'
     | '/teams'
@@ -193,6 +205,7 @@ export interface RootRouteChildren {
   MyWorkRoute: typeof MyWorkRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
   ReportsRoute: typeof ReportsRoute
+  SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   TasksRoute: typeof TasksRoute
   TeamsRoute: typeof TeamsRoute
@@ -219,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reports': {
@@ -316,6 +336,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyWorkRoute: MyWorkRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
   ReportsRoute: ReportsRoute,
+  SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   TasksRoute: TasksRoute,
   TeamsRoute: TeamsRoute,
