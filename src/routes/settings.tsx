@@ -1,0 +1,144 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useApp } from "@/lib/app-store";
+import { toast } from "sonner";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+
+export const Route = createFileRoute("/settings")({ component: SettingsPage });
+
+function SettingsPage() {
+  const { currentUser, role, updatePassword } = useApp();
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [status, setStatus] = useState<{ type: "success" | "error" | null; message: string }>({ type: null, message: "" });
+  const [loading, setLoading] = useState(false);
+
+  async function handleUpdatePassword() {
+    setStatus({ type: null, message: "" });
+
+    if (!currentPassword.trim()) {
+      setStatus({ type: "error", message: "Please enter your current password." });
+      return;
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      setStatus({ type: "error", message: "New password must be at least 6 characters." });
+      return;
+    }
+
+    setLoading(true);
+    const result = await updatePassword(currentPassword, newPassword);
+    setLoading(false);
+
+    if (result.ok) {
+      setCurrentPassword("");
+      setNewPassword("");
+      setStatus({ type: "success", message: result.message });
+      toast.success(result.message);
+    } else {
+      setStatus({ type: "error", message: result.message });
+      toast.error(result.message);
+    }
+  }
+
+  return (
+    <AppLayout title="Settings" badge="Account" subtitle="Manage your workspace preferences">
+      <Tabs defaultValue="profile">
+        <TabsList>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="workspace">Workspace</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+        </TabsList>
+        <TabsContent value="profile" className="mt-4">
+          <Card className="p-6 max-w-2xl">
+            <h3 className="font-semibold mb-4">Profile</h3>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div><Label>Name</Label><Input defaultValue={currentUser.name} /></div>
+              <div><Label>Email</Label><Input defaultValue={currentUser.email} /></div>
+              <div><Label>Department</Label><Input defaultValue={currentUser.department} /></div>
+              <div><Label>Role</Label><Input defaultValue={role} disabled /></div>
+            </div>
+            <Button className="mt-4" onClick={()=>toast.success("Profile updated")}>Save Changes</Button>
+          </Card>
+        </TabsContent>
+        <TabsContent value="workspace" className="mt-4">
+          <Card className="p-6 max-w-2xl space-y-3">
+            <div className="flex items-center justify-between"><div><div className="font-medium">Compact mode</div><div className="text-xs text-muted-foreground">Denser tables and cards</div></div><Switch /></div>
+            <div className="flex items-center justify-between"><div><div className="font-medium">Auto-archive completed</div><div className="text-xs text-muted-foreground">After 30 days</div></div><Switch defaultChecked /></div>
+            <div className="flex items-center justify-between"><div><div className="font-medium">Show weekend deadlines</div><div className="text-xs text-muted-foreground">Include Sat/Sun in calendar</div></div><Switch /></div>
+          </Card>
+        </TabsContent>
+        <TabsContent value="notifications" className="mt-4">
+          <Card className="p-6 max-w-2xl space-y-3">
+            {["Email summaries","Task assignments","Approval requests","Mentions in comments","Deadline reminders"].map(n=>(
+              <div key={n} className="flex items-center justify-between"><span>{n}</span><Switch defaultChecked /></div>
+            ))}
+          </Card>
+        </TabsContent>
+        <TabsContent value="security" className="mt-4">
+        <Card className="p-6 max-w-2xl space-y-4">
+          <div>
+            <Label>Current Password</Label>
+            <div className="relative">
+              <Input
+                type={showCurrentPassword ? "text" : "password"}
+                className="pr-10"
+                value={currentPassword}
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                placeholder="Enter your current password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              >
+                {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <Label>New Password</Label>
+            <div className="relative">
+              <Input
+                type={showNewPassword ? "text" : "password"}
+                className="pr-10"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                placeholder="Create a new password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              >
+                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          {status.message ? (
+            <div className={`rounded-md border px-3 py-2 text-sm ${status.type === "success" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700" : "border-destructive/20 bg-destructive/10 text-destructive"}`}>
+              {status.message}
+            </div>
+          ) : null}
+
+          <Button onClick={handleUpdatePassword} disabled={loading}>
+            {loading ? "Updating..." : "Update Password"}
+          </Button>
+        </Card>
+      </TabsContent>
+      </Tabs>
+    </AppLayout>
+  );
+}
