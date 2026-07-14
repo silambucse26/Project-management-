@@ -65,7 +65,6 @@ function TeamsPage() {
                 <th className="text-left p-3">Workload</th>
                 <th className="text-left p-3">Projects</th>
                 <th className="text-left p-3">Trend</th>
-                <th className="text-left p-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -91,7 +90,6 @@ function TeamsPage() {
                     <td className="p-3">
                       {d.performance==="up"?<TrendingUp className="size-4 text-success" />:d.performance==="down"?<TrendingDown className="size-4 text-destructive" />:<Minus className="size-4 text-muted-foreground" />}
                     </td>
-                    <td className="p-3"><Button size="sm" variant="ghost">View</Button></td>
                   </tr>
                 );
               })}

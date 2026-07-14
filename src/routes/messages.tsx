@@ -8,7 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { useApp } from "@/lib/app-store";
 import { useMemo, useState } from "react";
 import { Send } from "lucide-react";
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 export const Route = createFileRoute("/messages")({
   component: MessagesPage,
 });
@@ -28,7 +34,7 @@ function MessagesPage() {
 
   const [message, setMessage] = useState("");
   const [selectedDate, setSelectedDate] = useState(today);
-
+  const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "1",
@@ -59,16 +65,23 @@ function MessagesPage() {
   ]);
 
   const filteredMessages = useMemo(() => {
-    return messages
-      .filter(
-        (chat) => chat.createdAt.split("T")[0] === selectedDate
-      )
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime()
-      );
-  }, [messages, selectedDate]);
+  return messages
+    .filter((chat) => {
+      const sameDate =
+        chat.createdAt.split("T")[0] === selectedDate;
+
+      const sameDepartment =
+        selectedDepartment === "all" ||
+        chat.department === selectedDepartment;
+
+      return sameDate && sameDepartment;
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
+    );
+}, [messages, selectedDate, selectedDepartment]);
 
   function handleSendMessage() {
     if (!message.trim()) return;
@@ -131,18 +144,46 @@ function MessagesPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Label>Select Date</Label>
+          <div className="flex items-center gap-4">
 
-            <Input
-              type="date"
-              className="w-44"
-              value={selectedDate}
-              onChange={(e) =>
-                setSelectedDate(e.target.value)
-              }
-            />
+        {/* Show only for Admin */}
+        {role === "admin" && (
+          <div className="flex items-center gap-2">
+            <Label>Department</Label>
+
+            <Select
+              value={selectedDepartment}
+              onValueChange={setSelectedDepartment}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Departments" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                <SelectItem value="Management">Tech</SelectItem>
+                <SelectItem value="Development">Electronics & R&D</SelectItem>
+                <SelectItem value="Sales">Sales & Marketing</SelectItem>
+                <SelectItem value="Marketing">Operations</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          <Label>Select Date</Label>
+
+          <Input
+            type="date"
+            className="w-44"
+            value={selectedDate}
+            onChange={(e) =>
+              setSelectedDate(e.target.value)
+            }
+          />
+        </div>
+
+      </div>
         </div>
 
         <div className="space-y-3">
