@@ -109,15 +109,15 @@ function SearchPage() {
               </ResultSection>
             )}
 
-            {teamResults.length > 0 && (
+            {taskResults.length > 0 && (
               <ResultSection title="Teams">
-                {teamResults.map((team) => (
+                {taskResults.map((team) => (
                   <Link
                     key={team.id}
                     to="/teams"
                     className="block rounded-xl border bg-card p-4 transition hover:bg-muted/50"
                   >
-                    <h3 className="font-semibold">{team.name}</h3>
+                    <h3 className="font-semibold"></h3>
 
                     <p className="mt-1 text-sm text-muted-foreground">
                       Team

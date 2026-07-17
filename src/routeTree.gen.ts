@@ -22,6 +22,7 @@ import { Route as DepartmentsRouteImport } from './routes/departments'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TeamsIdRouteImport } from './routes/teams.$id'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
 
 const TeamsRoute = TeamsRouteImport.update({
@@ -89,6 +90,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TeamsIdRoute = TeamsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => TeamsRoute,
+} as any)
 const ProjectsIdRoute = ProjectsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -108,8 +114,9 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
-  '/teams': typeof TeamsRoute
+  '/teams': typeof TeamsRouteWithChildren
   '/projects/$id': typeof ProjectsIdRoute
+  '/teams/$id': typeof TeamsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -124,8 +131,9 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
-  '/teams': typeof TeamsRoute
+  '/teams': typeof TeamsRouteWithChildren
   '/projects/$id': typeof ProjectsIdRoute
+  '/teams/$id': typeof TeamsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -141,8 +149,9 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
-  '/teams': typeof TeamsRoute
+  '/teams': typeof TeamsRouteWithChildren
   '/projects/$id': typeof ProjectsIdRoute
+  '/teams/$id': typeof TeamsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/teams'
     | '/projects/$id'
+    | '/teams/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/teams'
     | '/projects/$id'
+    | '/teams/$id'
   id:
     | '__root__'
     | '/'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/teams'
     | '/projects/$id'
+    | '/teams/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -208,7 +220,7 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   TasksRoute: typeof TasksRoute
-  TeamsRoute: typeof TeamsRoute
+  TeamsRoute: typeof TeamsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -304,6 +316,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teams/$id': {
+      id: '/teams/$id'
+      path: '/$id'
+      fullPath: '/teams/$id'
+      preLoaderRoute: typeof TeamsIdRouteImport
+      parentRoute: typeof TeamsRoute
+    }
     '/projects/$id': {
       id: '/projects/$id'
       path: '/$id'
@@ -326,6 +345,16 @@ const ProjectsRouteWithChildren = ProjectsRoute._addFileChildren(
   ProjectsRouteChildren,
 )
 
+interface TeamsRouteChildren {
+  TeamsIdRoute: typeof TeamsIdRoute
+}
+
+const TeamsRouteChildren: TeamsRouteChildren = {
+  TeamsIdRoute: TeamsIdRoute,
+}
+
+const TeamsRouteWithChildren = TeamsRoute._addFileChildren(TeamsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApprovalsRoute: ApprovalsRoute,
@@ -339,7 +368,7 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   TasksRoute: TasksRoute,
-  TeamsRoute: TeamsRoute,
+  TeamsRoute: TeamsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

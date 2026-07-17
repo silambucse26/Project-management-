@@ -29,7 +29,7 @@ function ProjectsRoutePage() {
 }
 
 function ProjectsPage() {
-  const { visibleProjects: projects, tasks, addProject, currentUser, role } = useApp();
+  const {visibleProjects: projects,tasks,addProject,deleteProject,currentUser,role} = useApp();
   const defaultDepartment = role === "admin" ? departments[0].name : currentUser.department;
   const [dept, setDept] = useState("all");
   const [status, setStatus] = useState("all");
@@ -87,7 +87,11 @@ function ProjectsPage() {
     setOpen(false);
     toast.success("Project created");
   }
-
+  async function handleDelete(id: string) {
+  if (window.confirm("Delete this project?")) {
+    await deleteProject(id);
+  }
+}
   return (
     <AppLayout title="Project Portfolio" badge="All Projects" subtitle="Cross-departmental project overview">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -256,16 +260,35 @@ function ProjectsPage() {
                 <PriorityBadge priority={p.priority} />
               </div>
             </div>
-            <div className="mt-4 flex justify-between items-center pt-3 border-t">
-              <div className="text-xs text-muted-foreground">Due {p.due}</div>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/projects/$id" params={{id: p.id}}>Details <ExternalLink className="size-3" /></Link>
-              </Button>
-            </div>
-          </Card>
-          );
-        })}
+      <div className="mt-4 flex justify-between items-center pt-3 border-t">
+        <div className="text-xs text-muted-foreground">
+          Due {p.due}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {(role === "admin" || role === "head") && (
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={() => handleDelete(p.id)}
+            >
+              Delete
+            </Button>
+          )}
+
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/projects/$id" params={{ id: p.id }}>
+              Details <ExternalLink className="size-3" />
+            </Link>
+          </Button>
+        </div>
       </div>
+
+      </Card>
+      );
+      })}
+    </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
         <Card className="p-5">

@@ -47,7 +47,13 @@ interface AppState {
   addUser: (u: Omit<User, "id" | "initials" | "email"> & { email?: string }) => void;
   projects: Project[];
   visibleProjects: Project[];
-  addProject: (p: Omit<Project, "id" | "progress" | "status" | "teamSize"> & Partial<Pick<Project, "progress" | "status" | "teamSize">>) => Project;
+  addProject: (
+      p: Omit<Project, "id" | "progress" | "status" | "teamSize"> &
+        Partial<Pick<Project, "progress" | "status" | "teamSize">>
+    ) => Project;
+
+  deleteProject: (id: string) => Promise<void>;
+
   findProjectByName: (name: string) => Project | undefined;
   tasks: Task[];
   allTasks: Task[];
@@ -643,6 +649,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addStoredActivity({ user: currentUser.name, action: `created project "${newProject.name}"`, department: newProject.department, projectId: newProject.id, projectName: newProject.name, type: "project" });
       return newProject;
     },
+       deleteProject: async (id: string) => {
+          if (!currentUser) return;
+
+          if (
+            currentUser.role !== "admin" &&
+            currentUser.role !== "head"
+          ) {
+            toast.error("Only admins and department heads can delete projects.");
+            return;
+          }
+
+          const project = projects.find((item) => item.id === id);
+
+          if (!project) {
+            toast.error("Project not found.");
+            return;
+          }
+
+          if (
+            currentUser.role === "head" &&
+            project.department !== currentUser.department
+          ) {
+            toast.error("You can only delete projects from your department.");
+            return;
+          }
+
+          setProjects((previous) =>
+            previous.filter((item) => item.id !== id)
+          );
+
+          addStoredActivity({
+            user: currentUser.name,
+            action: `deleted project "${project.name}"`,
+            department: project.department,
+            projectId: project.id,
+            projectName: project.name,
+            type: "project",
+          });
+
+          toast.success("Project deleted.");
+        },
     findProjectByName: (name) => projects.find((project) => project.name.trim().toLowerCase() === name.trim().toLowerCase()),
     tasks: visibleTasks,
     allTasks: tasks,

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState, } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card } from "@/components/ui/card";
@@ -11,9 +11,17 @@ import { TrendingUp, TrendingDown, Minus, Repeat, CalendarCheck, FileText } from
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { toast } from "sonner";
 import { useApp } from "@/lib/app-store";
+export const Route = createFileRoute("/teams")({ component: TeamsRoutePage });
+function TeamsRoutePage() {
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
 
-export const Route = createFileRoute("/teams")({ component: TeamsPage });
+  const isDetailsPage =
+    pathname.replace(/\/$/, "") !== "/teams";
 
+  return isDetailsPage ? <Outlet /> : <TeamsPage />;
+}
 function workloadColor(w: number) {
   if (w >= 90) return "bg-destructive text-destructive-foreground";
   if (w >= 75) return "bg-warning text-warning-foreground";
@@ -202,7 +210,19 @@ function TeamsPage() {
               </Avatar>
 
               <div className="min-w-0">
-                <div className="font-medium text-sm truncate">{u.name}</div>
+                {(role === "admin" || role === "head") && u.role === "member" ? (
+                  <Link
+                    to="/teams/$id"
+                    params={{ id: u.id }}
+                    className="font-medium text-sm truncate hover:text-primary hover:underline"
+                  >
+                    {u.name}
+                  </Link>
+                ) : (
+                  <div className="font-medium text-sm truncate">
+                    {u.name}
+                  </div>
+                )}
 
                 {canManageTeam && (
                   <div className="text-xs text-muted-foreground truncate">
