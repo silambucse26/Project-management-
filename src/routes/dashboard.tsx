@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { FolderKanban, ListChecks, AlertTriangle, Users, UserCheck, Clock, ShieldCheck, ExternalLink } from "lucide-react";
 import {
@@ -27,6 +28,8 @@ function statusToTone(status: string) {
 
 function Dashboard() {
   const { role, tasks, approvals, visibleUsers, activities, currentUser, visibleProjects } = useApp();
+  const today = new Date();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(today);
   const activeTasks = tasks.filter((task) => task.status !== "completed" && task.status !== "approved");
   const completedTasks = tasks.filter((task) => task.status === "completed" || task.status === "approved");
   const departments = Array.from(new Set(tasks.map((task) => task.department))).filter(Boolean);
@@ -152,6 +155,9 @@ if (role === "member") {
 
       <Calendar
         mode="single"
+        selected={selectedDate}
+        onSelect={setSelectedDate}
+        defaultMonth={today}
         className="rounded-md border"
       />
     </div>

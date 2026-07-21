@@ -21,16 +21,24 @@ export const Route = createFileRoute("/messages")({
 
 type ChatMessage = {
   id: string;
+  sender_id: string;
   name: string;
   role: string;
   department: string;
   message: string;
-  createdAt: string;
+  created_at: string;
 };
+function getLocalDate(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
 function MessagesPage() {
   const { currentUser, role } = useApp();
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = getLocalDate();
 
   const [message, setMessage] = useState("");
   const [selectedDate, setSelectedDate] = useState(today);
@@ -39,28 +47,31 @@ function MessagesPage() {
     {
       id: "1",
       name: "Admin User",
+      sender_id: "admin-user-id",
       role: "admin",
       department: "Management",
       message:
         "Welcome team. Use this page for project updates and discussions.",
-      createdAt: "2026-07-09T09:30:00",
+      created_at: "2026-07-09T09:30:00",
     },
     {
       id: "2",
       name: "Department Head",
+      sender_id: "department-head-id",
       role: "head",
       department: "Development",
       message:
         "Please post your daily progress before leaving today.",
-      createdAt: "2026-07-09T10:15:00",
+      created_at: "2026-07-09T10:15:00",
     },
     {
       id: "3",
       name: "John Smith",
+      sender_id: "john-smith-id",
       role: "member",
       department: "Development",
       message: "Finished the authentication module.",
-      createdAt: "2026-07-08T15:30:00",
+      created_at: "2026-07-08T15:30:00",
     },
   ]);
 
@@ -68,8 +79,7 @@ function MessagesPage() {
   return messages
     .filter((chat) => {
       const sameDate =
-        chat.createdAt.split("T")[0] === selectedDate;
-
+        getLocalDate(new Date(chat.created_at)) === selectedDate;
       const sameDepartment =
         selectedDepartment === "all" ||
         chat.department === selectedDepartment;
@@ -78,8 +88,8 @@ function MessagesPage() {
     })
     .sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() -
-        new Date(a.createdAt).getTime()
+        new Date(b.created_at).getTime() -
+        new Date(a.created_at).getTime()
     );
 }, [messages, selectedDate, selectedDepartment]);
 
@@ -89,10 +99,11 @@ function MessagesPage() {
     const newMessage: ChatMessage = {
       id: crypto.randomUUID(),
       name: currentUser.name,
+      sender_id: currentUser.id,
       role,
       department: currentUser.department,
       message: message,
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     };
 
     setMessages((prev) => [newMessage, ...prev]);
@@ -211,7 +222,7 @@ function MessagesPage() {
                   </div>
 
                   <div className="text-xs text-muted-foreground">
-                    {new Date(chat.createdAt).toLocaleTimeString([], {
+                    {new Date(chat.created_at).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
