@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { FolderKanban, ListChecks, AlertTriangle, Users, UserCheck, Clock, ShieldCheck, ExternalLink } from "lucide-react";
+import { FolderKanban, ListChecks, AlertTriangle, Users, UserCheck, Clock, ShieldCheck, ExternalLink, CalendarDays, CheckCircle2, ArrowRight, CircleAlert } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
   PieChart, Pie, Cell, Legend,
@@ -96,6 +96,22 @@ if (role === "member") {
         task.projectName === project.name
     )
   );
+  const myCompletedTasks = myTasks.filter((task) => task.status === "completed" || task.status === "approved").length;
+  const myBlockedTasks = myTasks.filter((task) => task.status === "blocked").length;
+  const myReviewTasks = myTasks.filter((task) => task.status === "in-review").length;
+  const memberStats = [
+    { label: "My open tasks", value: myTasks.length - myCompletedTasks, icon: ListChecks, tone: "primary" as const, to: "/my-work" as const },
+    { label: "Projects assigned", value: myProjects.length, icon: FolderKanban, tone: "info" as const, to: "/projects" as const },
+    { label: "Waiting for review", value: myReviewTasks, icon: CalendarDays, tone: "purple" as const, to: "/my-work" as const },
+    { label: "Needs attention", value: myBlockedTasks, icon: CircleAlert, tone: "destructive" as const, to: "/my-work" as const },
+    { label: "Completed", value: myCompletedTasks, icon: CheckCircle2, tone: "success" as const, to: "/my-work" as const },
+  ];
+  const taskSummary = [
+    { name: "In progress", value: myTasks.filter((task) => task.status === "in-progress").length, color: "#3867f4" },
+    { name: "Pending review", value: myTasks.filter((task) => task.status === "in-review" || task.status === "changes").length, color: "#7454ef" },
+    { name: "Completed", value: myCompletedTasks, color: "#55bd42" },
+    { name: "Overdue", value: myBlockedTasks, color: "#ff9d19" },
+  ];
 
   return (
     <AppLayout
@@ -103,17 +119,26 @@ if (role === "member") {
       badge="Team Member"
       subtitle={`${currentUser.department} daily work`}
     >
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
+        {memberStats.map((stat) => (
+          <Link key={stat.label} to={stat.to} className="block transition-transform hover:-translate-y-0.5">
+            <StatCard {...stat} />
+          </Link>
+        ))}
+      </div>
      {/* Profile + Calendar */}
-<Card className="p-5">
-  <div className="grid lg:grid-cols-[1fr_340px] gap-6 items-start">
+<Card className="overflow-hidden border-0 shadow-xl rounded-3xl h-[320px]">
+  <div className="grid items-stretch gap-0 lg:grid-cols-[1.15fr_0.85fr]">
     {/* Profile Details */}
-    <div>
-      <h2 className="font-semibold text-lg mb-4">
+    <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-blue-600 to-purple-600 p-6 flex flex-col justify-between text-white">
+      <div className="absolute -right-16 -top-16 size-44 rounded-full bg-white/10" />
+      <div className="relative">
+      <h2 className="mb-4 text-base font-semibold">
         My Profile
       </h2>
 
-      <div className="grid grid-cols-[120px_20px_1fr] gap-y-4">
-        <span className="text-muted-foreground font-medium">
+      <div className="grid grid-cols-[96px_14px_1fr] gap-y-2 text-xs sm:text-sm">
+        <span className="font-medium text-white/75">
           Name
         </span>
         <span>:</span>
@@ -121,7 +146,7 @@ if (role === "member") {
           {currentUser.name}
         </span>
 
-        <span className="text-muted-foreground font-medium">
+        <span className="font-medium text-white/75">
           Role
         </span>
         <span>:</span>
@@ -129,7 +154,7 @@ if (role === "member") {
           {currentUser.role}
         </span>
 
-        <span className="text-muted-foreground font-medium">
+        <span className="font-medium text-white/75">
           Department
         </span>
         <span>:</span>
@@ -137,7 +162,7 @@ if (role === "member") {
           {currentUser.department}
         </span>
 
-        <span className="text-muted-foreground font-medium">
+        <span className="font-medium text-white/75">
           Email
         </span>
         <span>:</span>
@@ -145,91 +170,129 @@ if (role === "member") {
           {currentUser.email}
         </span>
       </div>
+      <Button variant="secondary" size="sm" className="mt-5 h-8 bg-white/15 px-3 text-xs text-white hover:bg-white/25" asChild>
+        <Link to="/settings">View profile <ArrowRight className="size-4" /></Link>
+      </Button>
+      </div>
     </div>
 
     {/* Calendar */}
-    <div>
-      <h3 className="font-medium mb-3">
+    <div className="p-5">
+      <div className="mb-2 flex items-center justify-between">
+      <h3 className="text-sm font-semibold">
         My Calendar
       </h3>
+      <Badge variant="secondary">Today</Badge>
+      </div>
 
       <Calendar
         mode="single"
         selected={selectedDate}
         onSelect={setSelectedDate}
         defaultMonth={today}
-        className="rounded-md border"
+       className="mx-auto rounded-xl bg-transparent p-0 [--cell-size:2rem]"
       />
     </div>
   </div>
 </Card>
 
 {/* Assigned Projects */}
-<Card className="p-5 mt-4">
-  <h2 className="font-semibold mb-3">
-    My Projects
-  </h2>
+<Card className="border-border/70 p-5 shadow-sm">
+  <div className="mb-4 flex items-center justify-between gap-3">
+    <h2 className="font-semibold">My Projects</h2>
+    <Button variant="link" size="sm" className="h-auto p-0 text-primary" asChild><Link to="/projects">View all <ArrowRight className="size-4" /></Link></Button>
+  </div>
 
-  <div className="grid md:grid-cols-2 gap-3">
+  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
     {myProjects.map((project) => (
-      <div key={project.id} className="border rounded-lg p-3">
+      <Link key={project.id} to="/projects/$id" params={{ id: project.id }} 
+      className="
+        group
+        rounded-2xl
+        bg-white
+        border
+        shadow-md
+        hover:shadow-xl
+        hover:-translate-y-1
+        transition
+        duration-300
+        p-5
+        ">
         <h3 className="font-medium">
           {project.name}
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           {project.department}
         </p>
-      </div>
+        <div className="mt-4"><Progress value={project.progress} className="h-1.5" /></div>
+      </Link>
     ))}
   </div>
 </Card>
 
       {/* Assigned Tasks */}
-      <Card className="p-5 mt-4">
-        <h2 className="font-semibold mb-3">My Assigned Tasks</h2>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <Card className="overflow-hidden border-border/70 p-0 shadow-sm">
+          <div className="flex items-center justify-between gap-3 px-5 pb-3 pt-4">
+            <h2 className="font-semibold">My Assigned Tasks</h2>
+            <Button variant="link" size="sm" className="h-auto p-0 text-primary" asChild><Link to="/my-work">View all tasks <ArrowRight className="size-4" /></Link></Button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-left text-xs">
+              <thead className="border-y bg-muted/35 text-muted-foreground">
+                <tr>
+                  <th className="px-5 py-3 font-medium">Task</th>
+                  <th className="px-3 py-3 font-medium">Project</th>
+                  <th className="px-3 py-3 font-medium">Priority</th>
+                  <th className="px-3 py-3 font-medium">Status</th>
+                  <th className="px-3 py-3 font-medium">Progress</th>
+                  <th className="px-5 py-3 font-medium">Due date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {myTasks.slice(0, 5).map((task) => {
+                  const progress = task.completionPercent ?? (task.status === "completed" || task.status === "approved" ? 100 : task.status === "in-progress" ? 50 : 0);
+                  const priorityClass = task.priority === "critical" || task.priority === "high" ? "bg-destructive/10 text-destructive" : task.priority === "medium" ? "bg-warning/15 text-warning" : "bg-success/10 text-success";
+                  return (
+                    <tr key={task.id} className="border-b last:border-0 transition-colors hover:bg-primary/[0.025]">
+                      <td className="max-w-48 truncate px-5 py-3.5 font-medium">{task.title}</td>
+                      <td className="max-w-36 truncate px-3 py-3.5 text-muted-foreground">{task.projectName || "Unassigned"}</td>
+                      <td className="px-3 py-3.5"><span className={`rounded-full px-2 py-1 text-[10px] font-semibold capitalize ${priorityClass}`}>{task.priority}</span></td>
+                      <td className="px-3 py-3.5"><StatusBadge status={task.status} /></td>
+                      <td className="px-3 py-3.5"><div className="flex items-center gap-2"><span className="font-medium">{progress}%</span><Progress value={progress} className="h-1.5 w-16" /></div></td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-muted-foreground">{task.due}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
 
-        <div className="space-y-3">
-          {myTasks.map((task) => (
-            <div
-              key={task.id}
-              className="border rounded-lg p-4"
-            >
-              <div className="flex justify-between">
-                <h3 className="font-medium">{task.title}</h3>
-                <StatusBadge status={task.status} />
-              </div>
-
-              <p className="text-sm text-muted-foreground mt-2">
-                {task.description}
-              </p>
-
-              <div className="grid md:grid-cols-3 gap-3 mt-3 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Project</span>
-                  <p>{task.projectName}</p>
-                </div>
-
-                <div>
-                  <span className="text-muted-foreground">Priority</span>
-                  <p>{task.priority}</p>
-                </div>
-
-                <div>
-                  <span className="text-muted-foreground">Department</span>
-                  <p>{task.department}</p>
-                </div>
-              </div>
+        <Card className="border-border/70 p-5 shadow-sm">
+          <h3 className="text-sm font-semibold">Task Summary</h3>
+          <div className="mt-2 flex items-center gap-3">
+            <ResponsiveContainer width={120} height={120}>
+              <PieChart>
+                <Pie data={taskSummary} dataKey="value" nameKey="name" innerRadius={35} outerRadius={55} paddingAngle={3} stroke="none">
+                  {taskSummary.map((item) => <Cell key={item.name} fill={item.color} />)}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="min-w-0 space-y-2 text-xs">
+              {taskSummary.map((item) => <div key={item.name} className="flex items-center justify-between gap-3"><span className="flex items-center gap-2 whitespace-nowrap text-muted-foreground"><span className="size-2 rounded-full" style={{ backgroundColor: item.color }} />{item.name}</span><span className="font-semibold">{item.value}</span></div>)}
             </div>
-          ))}
-        </div>
-      </Card>
+          </div>
+          <p className="-mt-2 text-center text-xs text-muted-foreground">{myTasks.length} total tasks</p>
+        </Card>
+      </div>
     </AppLayout>
   );
 }
 
   return (
     <AppLayout title={role === "admin" ? "Admin Dashboard" : "Department Dashboard"} badge="Overview" subtitle={role === "admin" ? "All heads, members, and tasks" : `${currentUser.department} tasks and team`}>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4">
         {stats.map((stat) => (
           <Link key={stat.label} to={stat.to} className="block transition-transform hover:-translate-y-0.5">
             <StatCard label={stat.label} value={stat.value} icon={stat.icon} tone={stat.tone} />
@@ -238,7 +301,7 @@ if (role === "member") {
       </div>
 
       <div className="grid lg:grid-cols-4 gap-6">
-        <Card className="p-5 lg:col-span-2">
+        <Card className="border-border/70 p-5 shadow-sm lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Task Progress Overview</h3>
             <span className="text-xs text-muted-foreground">By department</span>
@@ -268,7 +331,7 @@ if (role === "member") {
         />
       </Card>
 
-      <Card className="p-5">
+      <Card className="border-border/70 p-5 shadow-sm">
         <h3 className="font-semibold mb-1">Access Scope</h3>
         <p className="text-xs text-muted-foreground mb-4">
           {role === "admin"
@@ -288,7 +351,7 @@ if (role === "member") {
         </div>
       </Card>
       </div>
-      <Card className="p-5">
+      <Card className="border-border/70 p-5 shadow-sm">
         <div className="flex items-center justify-between gap-3 mb-4">
           <div>
             <h3 className="font-semibold">Project & Task Details</h3>
@@ -326,7 +389,7 @@ if (role === "member") {
       </Card>
 
       {role === "head" && (
-        <Card className="p-5">
+      <Card className="border-border/70 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
               <h3 className="font-semibold">Team Member Activity</h3>

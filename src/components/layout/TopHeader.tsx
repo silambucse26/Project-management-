@@ -54,11 +54,11 @@ const handleSearch = () => {
 };
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur">
-      <div className="flex h-16 items-center gap-3 px-4 md:px-6">
+    <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur-xl">
+      <div className="flex h-20 items-center gap-3 px-4 md:px-6">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h1 className="truncate text-lg font-bold md:text-xl">
+            <h1 className="truncate text-lg font-bold tracking-tight md:text-xl">
               {title}
             </h1>
 
@@ -99,7 +99,7 @@ const handleSearch = () => {
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Search projects, tasks, teams, users..."
             aria-label="Search workspace"
-            className="h-9 border-transparent bg-muted/40 pl-9 pr-10"
+            className="h-10 rounded-xl border-border/70 bg-card pl-9 pr-10 shadow-sm"
           />
 
           <button
@@ -115,7 +115,7 @@ const handleSearch = () => {
           </button>
         </form>
 
-        <div className="hidden items-center gap-1.5 rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground lg:flex">
+        <div className="hidden items-center gap-1.5 rounded-xl border border-border/70 bg-card px-3 py-2.5 text-xs font-medium text-muted-foreground shadow-sm lg:flex">
           <Calendar className="size-3.5" />
           Live workspace data
         </div>
@@ -123,7 +123,7 @@ const handleSearch = () => {
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="relative grid size-9 place-items-center rounded-md hover:bg-muted"
+            className="relative grid size-9 place-items-center rounded-xl hover:bg-muted"
             aria-label="Open notifications"
           >
             <Bell className="size-4" />

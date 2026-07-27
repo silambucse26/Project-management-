@@ -15,7 +15,7 @@ export function AppLayout({ title, subtitle, badge, children }: Props) {
       <Sidebar />
       <div className="flex-1 min-w-0 flex flex-col">
         <TopHeader title={title} subtitle={subtitle} badge={badge} />
-        <main className="flex-1 p-4 md:p-6 space-y-6">{children}</main>
+        <main className="dashboard-main flex-1 space-y-6 p-4 md:p-6">{children}</main>
       </div>
     </div>
   );

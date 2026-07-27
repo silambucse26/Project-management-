@@ -54,20 +54,20 @@
 }
 
 :root {
-  --radius: 0.75rem;
-  --background: #eaf6ff;
+  --radius: 0.9rem;
+  --background: #f5f7ff;
   --foreground: oklch(0.20 0.03 250);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.20 0.03 250);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.20 0.03 250);
-  --primary: oklch(0.55 0.20 255);
+  --primary: oklch(0.56 0.22 275);
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.96 0.01 250);
   --secondary-foreground: oklch(0.25 0.03 250);
   --muted: oklch(0.96 0.005 250);
   --muted-foreground: oklch(0.50 0.02 250);
-  --accent: oklch(0.95 0.02 255);
+  --accent: oklch(0.95 0.035 275);
   --accent-foreground: oklch(0.30 0.10 255);
   --destructive: oklch(0.60 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
@@ -79,10 +79,10 @@
   --info-foreground: oklch(0.99 0 0);
   --purple: oklch(0.60 0.20 295);
   --purple-foreground: oklch(0.99 0 0);
-  --border: oklch(0.92 0.01 250);
-  --input: oklch(0.92 0.01 250);
-  --ring: oklch(0.55 0.20 255);
-  --chart-1: oklch(0.55 0.20 255);
+  --border: oklch(0.91 0.018 270);
+  --input: oklch(0.92 0.015 270);
+  --ring: oklch(0.56 0.22 275);
+  --chart-1: oklch(0.56 0.22 275);
   --chart-2: oklch(0.65 0.16 150);
   --chart-3: oklch(0.72 0.17 60);
   --chart-4: oklch(0.60 0.20 295);
@@ -91,8 +91,8 @@
   --sidebar-foreground: oklch(0.30 0.03 250);
   --sidebar-primary: oklch(0.55 0.20 255);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.96 0.01 255);
-  --sidebar-accent-foreground: oklch(0.30 0.10 255);
+  --sidebar-accent: oklch(0.95 0.035 275);
+  --sidebar-accent-foreground: oklch(0.34 0.14 275);
   --sidebar-border: oklch(0.93 0.01 250);
   --sidebar-ring: oklch(0.55 0.20 255);
 }
@@ -139,8 +139,23 @@
   * { border-color: var(--color-border); }
   body {
     background-color: var(--color-background);
+    background-image: radial-gradient(circle at 92% -8%, rgb(214 228 255 / 0.7), transparent 28rem);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+  }
+
+  .dashboard-main {
+    max-width: 1720px;
+  }
+
+  .dashboard-stat-card {
+    border-color: rgb(226 231 246 / 0.95);
+    box-shadow: 0 8px 22px rgb(53 72 130 / 0.06);
+    transition: box-shadow 160ms ease, transform 160ms ease;
+  }
+
+  .dashboard-stat-card:hover {
+    box-shadow: 0 14px 30px rgb(53 72 130 / 0.11);
   }
 }

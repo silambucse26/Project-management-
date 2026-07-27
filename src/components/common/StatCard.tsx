@@ -22,9 +22,9 @@ const tones = {
 
 export function StatCard({ label, value, icon: Icon, trend, tone = "primary" }: Props) {
   return (
-    <Card className="p-5 gap-0">
-      <div className="flex items-center justify-between">
-        <div className={cn("size-10 rounded-lg grid place-items-center", tones[tone])}>
+    <Card className="dashboard-stat-card p-5 gap-0">
+      <div className="flex items-start justify-between gap-3">
+        <div className={cn("grid size-11 place-items-center rounded-2xl", tones[tone])}>
           <Icon className="size-5" />
         </div>
         {trend !== undefined && (
@@ -34,9 +34,9 @@ export function StatCard({ label, value, icon: Icon, trend, tone = "primary" }: 
           </div>
         )}
       </div>
-      <div className="mt-3">
-        <div className="text-2xl font-bold tracking-tight">{value}</div>
-        <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
+      <div className="mt-4">
+        <div className="text-2xl font-bold tracking-tight sm:text-3xl">{value}</div>
+        <div className="mt-1 text-xs font-medium text-muted-foreground">{label}</div>
       </div>
     </Card>
   );

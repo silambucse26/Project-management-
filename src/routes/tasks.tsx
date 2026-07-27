@@ -12,8 +12,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { StatCard } from "@/components/common/StatCard";
 import { PriorityBadge, StatusBadge } from "@/components/common/StatusBadge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertTriangle, Calendar, ChevronLeft, ChevronRight, Clock, AlertOctagon, Plus, ShieldCheck } from "lucide-react";
@@ -24,13 +23,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/tasks")({ component: TasksPage });
 
 const columns: { id: Task["status"]; label: string; color: string }[] = [
-  { id: "backlog", label: "Backlog", color: "bg-muted" },
   { id: "in-progress", label: "In Progress", color: "bg-primary" },
-  { id: "in-review", label: "In Review", color: "bg-purple" },
-  { id: "blocked", label: "Blocked", color: "bg-destructive" },
-  { id: "changes", label: "Changes", color: "bg-warning" },
   { id: "completed", label: "Completed", color: "bg-success" },
-  { id: "approved", label: "Approved", color: "bg-success" },
 ];
 
 function parseDueDate(value: string) {
@@ -80,7 +74,7 @@ function TasksPage() {
   const [progressValue, setProgressValue] = useState("25");
   const assignableUsers = visibleUsers.filter((user) => user.role === "member" || user.id === currentUser.id);
   const [form, setForm] = useState({ projectName: "", title: "", desc: "", assigneeId: "", reviewerId: "", priority: "medium" as Task["priority"], status: "backlog" as Task["status"], startDate: todayISO(), due: "" });
-  const[selectedStatus, setSelectedStatus] = useState<Task["status"]>("backlog");
+  const[selectedStatus, setSelectedStatus] = useState<Task["status"]>("in-progress");
   const grouped = useMemo(() => {
     const g: Record<string, Task[]> = {};
     columns.forEach(c => g[c.id] = []);
@@ -195,13 +189,13 @@ function TasksPage() {
         <StatCard label="Pending Reviews" value={review} icon={Clock} tone="purple" />
         <StatCard label="Critical Tasks" value={criticalTasks} icon={ShieldCheck} tone="warning" />
       </div>
-
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Kanban Board</h2>
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild><Button><Plus className="size-4" />Add Task</Button></SheetTrigger>
-          <SheetContent className="overflow-y-auto">
-            <SheetHeader><SheetTitle>Add New Task</SheetTitle></SheetHeader>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <Button onClick={() => setOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Task
+          </Button>
+        <DialogContent className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl">
             <div className="space-y-4 p-4">
               <div><Label>Project Name</Label>
                 <div className="flex gap-2">
@@ -236,12 +230,27 @@ function TasksPage() {
               <div><Label>Created By</Label><Input value={currentUser.name} readOnly /></div>
               <div className="flex items-center justify-between p-3 rounded-lg border"><Label className="text-sm">Notify Assignee</Label><Switch defaultChecked /></div>
             </div>
-            <SheetFooter><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={openDueDatePopup}>Add Task</Button></SheetFooter>
-          </SheetContent>
-        </Sheet>
+            <DialogFooter className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+
+              <Button onClick={openDueDatePopup}>
+                Add Task
+              </Button>
+            </DialogFooter>
+
+            </DialogContent>
+            </Dialog>
       </div>
+      <h2 className="text-lg font-semibold">Kanban Board</h2>
       <div className="flex flex-wrap gap-2">
-        {columns.map((col) => (
+        {columns
+      
+        .map((col) => (
           <Button
             key={col.id}
             variant={selectedStatus === col.id ? "default" : "outline"}
@@ -277,92 +286,193 @@ function TasksPage() {
         </DialogContent>
       </Dialog>
 
-      <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
-        <SheetContent className="overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Task Details</SheetTitle>
-          </SheetHeader>
-          {selectedTask ? (
-            <div className="space-y-5 p-4">
-              <div className="space-y-2">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold leading-snug">{selectedTask.title}</h3>
-                    <p className="text-xs text-primary font-medium">{selectedTask.projectName}</p>
-                  </div>
-                  <StatusBadge status={selectedTask.status} />
+     <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Task Details</DialogTitle>
+        </DialogHeader>
+
+        {selectedTask ? (
+          <div className="space-y-5 p-2">
+            <div className="space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-semibold leading-snug">
+                    {selectedTask.title}
+                  </h3>
+                  <p className="text-xs text-primary font-medium">
+                    {selectedTask.projectName}
+                  </p>
                 </div>
-                {selectedTask.description && <p className="text-sm text-muted-foreground">{selectedTask.description}</p>}
+
+                <StatusBadge status={selectedTask.status} />
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">Project Name</div>
-                  <div className="font-medium mt-1">{selectedTask.projectName}</div>
-                </div>
-                <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">Task Status</div>
-                  <div className="mt-1"><StatusBadge status={selectedTask.status} /></div>
-                </div>
-                <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">Start Date</div>
-                  <div className="font-medium mt-1">{displayDueDate(selectedTask.startDate ?? selectedTask.registeredAt ?? "")}</div>
-                </div>
-                <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">End Date</div>
-                  <div className="font-medium mt-1">{displayDueDate(selectedTask.due)}</div>
-                </div>
-                <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">Assignee</div>
-                  <div className="font-medium mt-1">{selectedTask.assignee}</div>
-                </div>
-                <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">Approval</div>
-                  <div className="mt-1"><StatusBadge status={selectedTask.approvalStatus ?? "not-submitted"} /></div>
-                </div>
-                <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">Delay</div>
-                  <div className="mt-1">{isDelayed(selectedTask) ? <Badge className="bg-destructive/15 text-destructive hover:bg-destructive/15">Delayed Task</Badge> : <Badge variant="outline">On Time</Badge>}</div>
-                </div>
-              </div>
-
-              <div className="space-y-2 rounded-lg border p-3">
-                <div className="flex items-center justify-between">
-                  <Label>Current Progress</Label>
-                  <span className="text-sm font-semibold">{selectedTask.completionPercent ?? (selectedTask.status === "completed" ? 100 : 0)}%</span>
-                </div>
-                <Progress value={selectedTask.completionPercent ?? (selectedTask.status === "completed" ? 100 : 0)} className="h-2" />
-              </div>
-
-              {(selectedTask.completionPercent ?? 0) < 100 && (
-                <div className="space-y-2">
-                  <Label>Pending Reason</Label>
-                  <Textarea value={detailForm.pendingReason} onChange={(event)=>setDetailForm({...detailForm, pendingReason: event.target.value})} placeholder="Why is this task still pending?" rows={3} />
-                </div>
+              {selectedTask.description && (
+                <p className="text-sm text-muted-foreground">
+                  {selectedTask.description}
+                </p>
               )}
-
-              {isDelayed(selectedTask) && (
-                <div className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-                  <Label>Delay Reason</Label>
-                  <Textarea value={detailForm.delayReason} onChange={(event)=>setDetailForm({...detailForm, delayReason: event.target.value})} placeholder="Explain the reason for delay" rows={3} />
-                  <Button variant="outline" className="w-full" onClick={sendDelayReason}>Send Delay Reason to Approvals</Button>
-                </div>
-              )}
-
-              <SheetFooter>
-                <Button variant="outline" onClick={()=>setDetailOpen(false)}>Close</Button>
-                <Button variant="outline" onClick={()=>openProgressPopup(selectedTask)}>Update Progress</Button>
-                {selectedTask.approvalStatus !== "pending" && selectedTask.approvalStatus !== "approved" && (
-                  <Button variant="outline" onClick={()=>{submitTaskForReview(selectedTask.id); setDetailOpen(false); toast.success("Task submitted for review");}}>Submit for Review</Button>
-                )}
-                <Button onClick={()=>openProgressPopup(selectedTask)}>Complete Task</Button>
-              </SheetFooter>
             </div>
-          ) : (
-            <div className="p-4 text-sm text-muted-foreground">Select a task to view details.</div>
-          )}
-        </SheetContent>
-      </Sheet>
+
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-lg border p-3">
+                <div className="text-xs text-muted-foreground">Project Name</div>
+                <div className="font-medium mt-1">
+                  {selectedTask.projectName}
+                </div>
+              </div>
+
+              <div className="rounded-lg border p-3">
+                <div className="text-xs text-muted-foreground">Task Status</div>
+                <StatusBadge status={selectedTask.status} />
+              </div>
+
+              <div className="rounded-lg border p-3">
+                <div className="text-xs text-muted-foreground">Start Date</div>
+                <div className="font-medium mt-1">
+                  {displayDueDate(
+                    selectedTask.startDate ??
+                      selectedTask.registeredAt ??
+                      ""
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-lg border p-3">
+                <div className="text-xs text-muted-foreground">End Date</div>
+                <div className="font-medium mt-1">
+                  {displayDueDate(selectedTask.due)}
+                </div>
+              </div>
+
+              <div className="rounded-lg border p-3">
+                <div className="text-xs text-muted-foreground">Assignee</div>
+                <div className="font-medium mt-1">
+                  {selectedTask.assignee}
+                </div>
+              </div>
+
+              <div className="rounded-lg border p-3">
+                <div className="text-xs text-muted-foreground">Approval</div>
+                <StatusBadge
+                  status={selectedTask.approvalStatus ?? "not-submitted"}
+                />
+              </div>
+
+              <div className="rounded-lg border p-3">
+                <div className="text-xs text-muted-foreground">Delay</div>
+
+                {isDelayed(selectedTask) ? (
+                  <Badge className="bg-destructive/15 text-destructive">
+                    Delayed Task
+                  </Badge>
+                ) : (
+                  <Badge variant="outline">On Time</Badge>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2 rounded-lg border p-3">
+              <div className="flex items-center justify-between">
+                <Label>Current Progress</Label>
+
+                <span className="text-sm font-semibold">
+                  {selectedTask.completionPercent ??
+                    (selectedTask.status === "completed" ? 100 : 0)}
+                  %
+                </span>
+              </div>
+
+              <Progress
+                value={
+                  selectedTask.completionPercent ??
+                  (selectedTask.status === "completed" ? 100 : 0)
+                }
+              />
+            </div>
+
+            {(selectedTask.completionPercent ?? 0) < 100 && (
+              <div className="space-y-2">
+                <Label>Pending Reason</Label>
+
+                <Textarea
+                  value={detailForm.pendingReason}
+                  onChange={(e) =>
+                    setDetailForm({
+                      ...detailForm,
+                      pendingReason: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            )}
+
+            {isDelayed(selectedTask) && (
+              <div className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                <Label>Delay Reason</Label>
+
+                <Textarea
+                  value={detailForm.delayReason}
+                  onChange={(e) =>
+                    setDetailForm({
+                      ...detailForm,
+                      delayReason: e.target.value,
+                    })
+                  }
+                />
+
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={sendDelayReason}
+                >
+                  Send Delay Reason
+                </Button>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDetailOpen(false)}
+              >
+                Close
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => openProgressPopup(selectedTask)}
+              >
+                Update Progress
+              </Button>
+
+              {selectedTask.approvalStatus !== "pending" &&
+                selectedTask.approvalStatus !== "approved" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      submitTaskForReview(selectedTask.id);
+                      setDetailOpen(false);
+                      toast.success("Task submitted for review");
+                    }}
+                  >
+                    Submit for Review
+                  </Button>
+                )}
+
+              <Button onClick={() => openProgressPopup(selectedTask)}>
+                Complete Task
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <div className="p-4 text-sm text-muted-foreground">
+            Select a task to view details.
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
 
       <Dialog open={progressOpen} onOpenChange={setProgressOpen}>
         <DialogContent>
@@ -428,10 +538,22 @@ function TasksPage() {
             key={t.id}
             className="grid grid-cols-1 gap-3 px-4 py-4 hover:bg-muted/30 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]"
           >
-            <div>
-              <div className="font-medium">{t.title}</div>
-              <div className="text-xs text-muted-foreground">{t.projectName}</div>
+          <div className="space-y-2">
+            <div className="font-medium">{t.title}</div>
+
+            <div className="text-xs text-muted-foreground">
+              {t.projectName}
             </div>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => openTaskDetails(t)}
+              className="w-fit"
+            >
+              View
+            </Button>
+          </div>
 
             <div className="text-sm">{t.department}</div>
             <PriorityBadge priority={t.priority} />
@@ -445,11 +567,8 @@ function TasksPage() {
               {displayDueDate(t.due)}
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={() => openTaskDetails(t)}>
-                View
-              </Button>
-
+        
+            <div>
               {t.approvalStatus !== "pending" && t.approvalStatus !== "approved" && (
                 <Button
                   size="sm"

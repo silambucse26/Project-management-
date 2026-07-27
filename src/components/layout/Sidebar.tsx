@@ -55,18 +55,18 @@ export function Sidebar() {
     : memberNav;
 
   return (
-    <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r bg-sidebar h-screen sticky top-0">
-      <div className="h-16 flex items-center gap-2 px-5 border-b">
-        <div className="size-9 rounded-lg bg-primary grid place-items-center text-primary-foreground">
+    <aside className="hidden h-screen w-64 shrink-0 flex-col border-r bg-sidebar lg:sticky lg:top-0 lg:flex">
+      <div className="flex h-20 items-center gap-3 px-5">
+        <div className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/25">
           <Briefcase className="size-5" />
         </div>
         <div>
-          <div className="font-bold text-sidebar-foreground leading-tight">Chimertech PM</div>
+          <div className="font-bold leading-tight text-sidebar-foreground">Chimertech PM</div>
           <div className="text-[10px] text-muted-foreground">Enterprise Workspace</div>
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {items.map((it, i) => {
           const Icon = it.icon;
           const active = pathname === it.to || (it.to !== "/dashboard" && pathname.startsWith(it.to));
@@ -75,10 +75,10 @@ export function Sidebar() {
               key={`${it.to}-${i}`}
               to={it.to}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
                 active
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/60"
+                  ? "bg-gradient-to-r from-primary to-[#7972f4] text-primary-foreground shadow-md shadow-primary/20"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/70"
               )}
             >
               <Icon className="size-4" />
@@ -89,7 +89,7 @@ export function Sidebar() {
       </nav>
 
       <div className="p-3 border-t">
-        <div className="rounded-xl border bg-card p-3">
+        <div className="rounded-2xl border bg-card p-3.5 shadow-sm">
           <div className="flex items-center gap-2 text-xs font-semibold">
             <ShieldCheck className="size-3.5 text-primary" /> Role-Based Control
           </div>
