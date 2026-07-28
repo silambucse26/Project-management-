@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"; 
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/common/StatCard";
@@ -24,7 +24,16 @@ function workloadColor(w: string) {
 
 function ReportsPage() {
   const [loading, setLoading] = useState(false);
-  const { tasks, users, visibleUsers, visibleProjects, approvals } = useApp();
+ const {
+  tasks,
+  users,
+  visibleUsers,
+  visibleProjects,
+  approvals,
+  currentUser,
+} = useApp();
+
+const isAdmin = currentUser?.role === "admin";
   const activeTasks = tasks.filter((task) => task.status !== "completed" && task.status !== "approved");
   const completedTasks = tasks.filter((task) => task.status === "completed" || task.status === "approved");
   const blockedTasks = tasks.filter((task) => task.status === "blocked");
@@ -82,7 +91,6 @@ function ReportsPage() {
   });
   const topDepartment = productivityData.slice().sort((a, b) => b.value - a.value)[0];
   const delayedDepartment = overdueData.slice().sort((a, b) => b.count - a.count)[0];
-
   function generate() {
     setLoading(true);
     setTimeout(()=>{ setLoading(false); toast.success("Report generated successfully"); }, 900);
@@ -90,25 +98,6 @@ function ReportsPage() {
 
   return (
     <AppLayout title="Reports & Analytics" badge="Insights" subtitle="Performance, productivity, and trends">
-      <Card className="p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <Select defaultValue="may"><SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="may">May 2025</SelectItem><SelectItem value="apr">Apr 2025</SelectItem></SelectContent></Select>
-          <Select defaultValue="all"><SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">All Departments</SelectItem></SelectContent></Select>
-          <Select defaultValue="all"><SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">All Project Types</SelectItem></SelectContent></Select>
-          <Select defaultValue="all"><SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">All Roles</SelectItem></SelectContent></Select>
-          <div className="ml-auto flex gap-2">
-            <Button variant="outline" size="sm" onClick={()=>toast.success("Report exported successfully")}><Download className="size-4" />Export</Button>
-            <Button size="sm" onClick={generate} disabled={loading}>
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
-              Generate Report
-            </Button>
-          </div>
-        </div>
-      </Card>
 
       <div className="grid md:grid-cols-3 gap-4">
         <Card className="p-5">

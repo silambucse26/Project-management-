@@ -217,7 +217,9 @@ function ProjectsPage() {
                 </Link>
                 <div className="text-xs text-muted-foreground">{p.department} - {p.owner}</div>
               </div>
-              <StatusBadge status={projectPhase(p)} />
+              <Link to="/projects/$id" params={{ id: p.id }} aria-label={`View ${p.name} details`}>
+                <StatusBadge status={projectPhase(p)} />
+              </Link>
             </div>
             <div className="mt-4">
               <div className="flex justify-between text-xs mb-1.5"><span className="text-muted-foreground">Progress</span><span className="font-medium">{progress}%</span></div>
@@ -235,7 +237,9 @@ function ProjectsPage() {
                   <div key={task.id} className="min-w-0 rounded-md bg-background/70 p-2">
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-xs font-medium truncate">{task.title}</div>
-                      <StatusBadge status={task.status === "in-review" ? "in-progress" : task.status} />
+                      <Link to="/projects/$id" params={{ id: p.id }} aria-label={`View ${p.name} details`}>
+                        <StatusBadge status={task.status === "in-review" ? "in-progress" : task.status} />
+                      </Link>
                     </div>
                     <div className="mt-1 grid grid-cols-3 gap-2 text-[11px] text-muted-foreground">
                       <span className="truncate">Start {task.startDate ?? "Not set"}</span>
@@ -257,7 +261,9 @@ function ProjectsPage() {
                 {p.teamSize > 4 && <div className="size-7 rounded-full bg-muted border-2 border-card grid place-items-center text-[10px] font-medium">+{p.teamSize-4}</div>}
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <PriorityBadge priority={p.priority} />
+                <Link to="/projects/$id" params={{ id: p.id }} aria-label={`View ${p.name} details`}>
+                  <PriorityBadge priority={p.priority} />
+                </Link>
               </div>
             </div>
       <div className="mt-4 flex justify-between items-center pt-3 border-t">
@@ -303,7 +309,9 @@ function ProjectsPage() {
                 >
                   {p.name}
                 </Link>
-                <StatusBadge status={projectPhase(p)} />
+                <Link to="/projects/$id" params={{ id: p.id }} aria-label={`View ${p.name} details`}>
+                  <StatusBadge status={projectPhase(p)} />
+                </Link>
               </li>
             ))}
           </ul>
@@ -320,7 +328,9 @@ function ProjectsPage() {
                 >
                   {p.name}
                 </Link>
-                <StatusBadge status="blocked" />
+                <Link to="/projects/$id" params={{ id: p.id }} aria-label={`View ${p.name} details`}>
+                  <StatusBadge status="blocked" />
+                </Link>
               </li>
             ))}
           </ul>

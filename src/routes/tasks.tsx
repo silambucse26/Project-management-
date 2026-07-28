@@ -74,7 +74,12 @@ function TasksPage() {
   const [progressValue, setProgressValue] = useState("25");
   const assignableUsers = visibleUsers.filter((user) => user.role === "member" || user.id === currentUser.id);
   const [form, setForm] = useState({ projectName: "", title: "", desc: "", assigneeId: "", reviewerId: "", priority: "medium" as Task["priority"], status: "backlog" as Task["status"], startDate: todayISO(), due: "" });
-  const[selectedStatus, setSelectedStatus] = useState<Task["status"]>("in-progress");
+  const [selectedFilter, setSelectedFilter] = useState<
+    "all" | "open" | "blocked" | "delayed" | "review" | "critical"
+  >("all");
+
+  const [selectedStatus, setSelectedStatus] =
+    useState<Task["status"]>("in-progress");
   const grouped = useMemo(() => {
     const g: Record<string, Task[]> = {};
     columns.forEach(c => g[c.id] = []);
@@ -88,6 +93,30 @@ function TasksPage() {
   const due = tasks.filter(t => t.status !== "completed" && t.status !== "approved").length;
   const blocked = tasks.filter(t => t.status === "blocked").length;
   const review = tasks.filter(t => t.status === "in-review").length;
+  const filteredTasks = selectedTasks.filter((task) => {
+  if (selectedFilter === "all") return true;
+
+  switch (selectedFilter) {
+    case "open":
+      return task.status === "in-progress";
+
+    case "blocked":
+      return task.status === "blocked";
+
+    case "delayed":
+      return isDelayed(task);
+
+    case "review":
+      return task.status === "in-review";
+
+    case "critical":
+      return task.priority === "critical";
+
+    default:
+      return true;
+  }
+});
+
   const selectedTask = tasks.find((task) => task.id === selectedTaskId);
 
   function openDueDatePopup() {
@@ -183,12 +212,68 @@ function TasksPage() {
   return (
     <AppLayout title="Task Board" badge="Kanban" subtitle="Assign, track, and manage workflow">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <StatCard label="Open Tasks" value={due} icon={Calendar} tone="primary" />
-        <StatCard label="Blocked Tasks" value={blocked} icon={AlertOctagon} tone="destructive" />
-        <StatCard label="Delayed Tasks" value={delayedTasks.length} icon={AlertTriangle} tone="destructive" />
-        <StatCard label="Pending Reviews" value={review} icon={Clock} tone="purple" />
-        <StatCard label="Critical Tasks" value={criticalTasks} icon={ShieldCheck} tone="warning" />
+
+      <div
+        onClick={() => role === "admin" && setSelectedFilter("open")}
+        className={role === "admin" ? "cursor-pointer" : ""}
+      >
+        <StatCard
+          label="Open Tasks"
+          value={due}
+          icon={Calendar}
+          tone="primary"
+        />
       </div>
+
+      <div
+        onClick={() => role === "admin" && setSelectedFilter("blocked")}
+        className={role === "admin" ? "cursor-pointer" : ""}
+      >
+        <StatCard
+          label="Blocked Tasks"
+          value={blocked}
+          icon={AlertOctagon}
+          tone="destructive"
+        />
+      </div>
+
+      <div
+        onClick={() => role === "admin" && setSelectedFilter("delayed")}
+        className={role === "admin" ? "cursor-pointer" : ""}
+      >
+        <StatCard
+          label="Delayed Tasks"
+          value={delayedTasks.length}
+          icon={AlertTriangle}
+          tone="destructive"
+        />
+      </div>
+
+      <div
+        onClick={() => role === "admin" && setSelectedFilter("review")}
+        className={role === "admin" ? "cursor-pointer" : ""}
+      >
+        <StatCard
+          label="Pending Reviews"
+          value={review}
+          icon={Clock}
+          tone="purple"
+        />
+      </div>
+
+      <div
+        onClick={() => role === "admin" && setSelectedFilter("critical")}
+        className={role === "admin" ? "cursor-pointer" : ""}
+      >
+        <StatCard
+          label="Critical Tasks"
+          value={criticalTasks}
+          icon={ShieldCheck}
+          tone="warning"
+        />
+      </div>
+
+    </div>
       <div className="flex items-center justify-between">
         <Dialog open={open} onOpenChange={setOpen}>
           <Button onClick={() => setOpen(true)}>
@@ -526,7 +611,7 @@ function TasksPage() {
     </div>
   ) : (
     <div className="divide-y">
-      {selectedTasks.map((t) => {
+      {filteredTasks.map((t) => {
         const progress =
           t.completionPercent ??
           (t.status === "completed" || t.status === "approved" ? 100 : 0);

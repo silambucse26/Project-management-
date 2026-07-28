@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
 const statusStyles: Record<string, string> = {
   "on-track": "bg-success/15 text-success border-success/20",
@@ -39,10 +40,15 @@ const labels: Record<string, string> = {
   escalated: "Escalated",
 };
 
-export function StatusBadge({ status }: { status: string }) {
+type BadgeLinkProps = {
+  asChild?: boolean;
+  children?: ReactNode;
+};
+
+export function StatusBadge({ status, asChild, children }: { status: string } & BadgeLinkProps) {
   return (
-    <Badge variant="outline" className={cn("font-medium", statusStyles[status] ?? "")}>
-      {labels[status] ?? status}
+    <Badge asChild={asChild} variant="outline" className={cn("font-medium", asChild && "cursor-pointer hover:opacity-80", statusStyles[status] ?? "")}>
+      {asChild ? children : labels[status] ?? status}
     </Badge>
   );
 }
@@ -54,10 +60,10 @@ const priorityStyles: Record<string, string> = {
   critical: "bg-destructive/15 text-destructive border-destructive/20",
 };
 
-export function PriorityBadge({ priority }: { priority: string }) {
+export function PriorityBadge({ priority, asChild, children }: { priority: string } & BadgeLinkProps) {
   return (
-    <Badge variant="outline" className={cn("font-medium capitalize", priorityStyles[priority] ?? "")}>
-      {priority}
+    <Badge asChild={asChild} variant="outline" className={cn("font-medium capitalize", asChild && "cursor-pointer hover:opacity-80", priorityStyles[priority] ?? "")}>
+      {asChild ? children : priority}
     </Badge>
   );
 }
