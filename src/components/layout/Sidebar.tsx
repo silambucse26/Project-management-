@@ -14,7 +14,6 @@ const adminNav = [
   { to: "/teams", label: "Teams", icon: Users },
   { to: "/approvals", label: "Approvals", icon: CheckCircle2 },
   { to: "/reports", label: "Reports", icon: FileText },
-  { to: "/reports", label: "Analytics", icon: BarChart3 },
   { to: "/messages", label: "Messages", icon: MessageSquare },
   { to: "/help-center", label: "Help Center", icon: HelpCircle },
   { to: "/settings", label: "Settings", icon: Settings },

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { BriefcaseBusiness, LogIn, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import loginBg from "@/assets/login-bg.png";
 import {
   type Task,
   type Approval,
@@ -310,8 +311,17 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
   }
 
   return (
-    <div className="min-h-screen bg-background grid place-items-center p-4">
-      <Card className="w-full max-w-lg p-6">
+        <div
+          className="min-h-screen grid place-items-center p-4 bg-no-repeat"
+          style={{
+            backgroundImage: `url(${loginBg})`,
+            backgroundSize: "100% auto",      // Change to 85%, 90%, 95%, etc.
+            backgroundPosition: "center top",
+            backgroundRepeat: "no-repeat",
+            backgroundColor: "#eef6ff",
+          }}
+        >
+        <Card className="w-full max-w-lg mt-28 p-8 rounded-2xl bg-white/95 shadow-2xl border border-white/40 backdrop-blur-sm">
         <div className="flex items-center gap-3 mb-6">
           <div className="size-11 rounded-lg bg-primary grid place-items-center text-primary-foreground">
             <BriefcaseBusiness className="size-5" />

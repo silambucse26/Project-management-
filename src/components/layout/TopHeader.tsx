@@ -115,10 +115,6 @@ const handleSearch = () => {
           </button>
         </form>
 
-        <div className="hidden items-center gap-1.5 rounded-xl border border-border/70 bg-card px-3 py-2.5 text-xs font-medium text-muted-foreground shadow-sm lg:flex">
-          <Calendar className="size-3.5" />
-          Live workspace data
-        </div>
 
         {/* Notifications */}
         <DropdownMenu>
