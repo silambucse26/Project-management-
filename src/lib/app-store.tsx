@@ -318,7 +318,7 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
             backgroundSize: "100% auto",      // Change to 85%, 90%, 95%, etc.
             backgroundPosition: "center top",
             backgroundRepeat: "no-repeat",
-            backgroundColor: "#eef6ff",
+            backgroundColor: "#3387e7",
           }}
         >
         <Card className="w-full max-w-lg mt-28 p-8 rounded-2xl bg-white/95 shadow-2xl border border-white/40 backdrop-blur-sm">
@@ -327,8 +327,8 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
             <BriefcaseBusiness className="size-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold">Chimertech Workspace Login</h1>
-            <p className="text-sm text-muted-foreground">Sign in with your employee credentials.</p>
+            <h1 className="text-xl font-bold text-slate-800">Chimertech Workspace Login</h1>
+            <p className="text-sm text-slate-500">Sign in with your employee credentials.</p>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2 mb-5 rounded-lg bg-muted p-1">
@@ -339,11 +339,11 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
           {mode === "signin" ? (
             <>
               <div>
-                <Label>Employee ID</Label>
+                <Label className="text-sm font-medium text-slate-700">Employee ID</Label>
                 <Input value={signIn.employeeId} onChange={(event) => setSignIn({ ...signIn, employeeId: event.target.value })} placeholder="ADM001" autoComplete="username" />
               </div>
               <div>
-                <Label>Password</Label>
+                <Label className="text-sm font-medium text-slate-700">Password</Label>
                 <Input type="password" value={signIn.password} onChange={(event) => setSignIn({ ...signIn, password: event.target.value })} placeholder="Enter password" autoComplete="current-password" />
               </div>
             </>
@@ -351,7 +351,7 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
             <>
               <div className="grid sm:grid-cols-2 gap-3">
                 <div>
-                  <Label>Employee ID</Label>
+                  <Label className="text-sm font-medium text-slate-700">Employee ID</Label>
                   <Input value={form.employeeId} onChange={(event) => setForm({ ...form, employeeId: normalizeEmployeeId(event.target.value) })} placeholder="EMP030" autoComplete="username" />
                 </div>
                 <div>
@@ -384,12 +384,12 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
               </div>
               </div>
               <div>
-                <Label>Name</Label>
+                <Label className="text-sm font-medium text-slate-700">Name</Label>
                 <Input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Enter your full name" />
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
                 <div>
-                  <Label>Role</Label>
+                  <Label className="text-sm font-medium text-slate-700">Role</Label>
                   <Select value={form.role} onValueChange={(value) => {
                     const nextRole = value as Role;
                     setForm({
@@ -406,7 +406,7 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
                   </Select>
                 </div>
                 <div>
-                  <Label>Department</Label>
+                  <Label className="text-sm font-medium text-slate-700">Department</Label>
                   <Select value={form.department} onValueChange={updateDepartment}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{departments.map((department) => <SelectItem key={department} value={department}>{department}</SelectItem>)}</SelectContent>
@@ -414,14 +414,14 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
                 </div>
               </div>
               <div>
-                <Label>Role / Title</Label>
+                <Label className="text-sm font-medium text-slate-700">Role / Title</Label>
                 <Select value={form.title} onValueChange={(value) => setForm({ ...form, title: value })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{titleOptions.map((title) => <SelectItem key={title} value={title}>{title}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Department Head</Label>
+                <Label className="text-sm font-medium text-slate-700">Department Head</Label>
                 <Input value={selectedHead ? `${selectedHead.name} - ${selectedHead.title}` : "No head assigned"} readOnly />
               </div>
             </>

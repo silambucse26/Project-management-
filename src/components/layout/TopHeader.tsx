@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Calendar, Search } from "lucide-react";
+import { Bell, Search, Sun } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "@tanstack/react-router";
@@ -54,7 +54,7 @@ const handleSearch = () => {
 };
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-white/[0.10] bg-transparent shadow-[0_12px_40px_rgba(14,16,65,0.08)] backdrop-blur-xl">
       <div className="flex h-20 items-center gap-3 px-4 md:px-6">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -85,7 +85,7 @@ const handleSearch = () => {
             e.preventDefault();
             handleSearch();
           }}
-          className="relative hidden w-72 md:flex"
+          className="relative hidden w-[min(34vw,420px)] md:flex"
           role="search"
         >
           <Search
@@ -99,7 +99,7 @@ const handleSearch = () => {
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Search projects, tasks, teams, users..."
             aria-label="Search workspace"
-            className="h-10 rounded-xl border-border/70 bg-card pl-9 pr-10 shadow-sm"
+            className="h-11 rounded-xl border-white/10 bg-white/[0.05] pl-10 pr-10 text-xs shadow-inner shadow-black/10 transition placeholder:text-slate-400 focus:border-violet-400/50"
           />
 
           <button
@@ -174,6 +174,10 @@ const handleSearch = () => {
             )}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <button type="button" aria-label="Toggle theme" className="grid size-9 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-amber-300 transition hover:border-violet-400/40 hover:bg-violet-500/15 hover:rotate-12">
+          <Sun className="size-4" />
+        </button>
 
         {/* User menu */}
         <DropdownMenu>

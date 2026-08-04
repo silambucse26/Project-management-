@@ -54,9 +54,9 @@ export function Sidebar() {
     : memberNav;
 
   return (
-    <aside className="hidden h-screen w-64 shrink-0 flex-col border-r bg-sidebar lg:sticky lg:top-0 lg:flex">
+    <aside className="hidden h-screen w-64 shrink-0 flex-col border-r border-white/[0.12] bg-[linear-gradient(180deg,rgba(9,15,55,0.94),rgba(14,17,62,0.88))] shadow-[18px_0_55px_rgba(5,8,38,0.24)] backdrop-blur-2xl lg:sticky lg:top-0 lg:flex">
       <div className="flex h-20 items-center gap-3 px-5">
-        <div className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/25">
+        <div className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-cyan-400 via-blue-500 to-violet-600 text-white shadow-lg shadow-cyan-400/25">
           <Briefcase className="size-5" />
         </div>
         <div>
@@ -74,10 +74,10 @@ export function Sidebar() {
               key={`${it.to}-${i}`}
               to={it.to}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300",
                 active
                   ? "bg-gradient-to-r from-primary to-[#7972f4] text-primary-foreground shadow-md shadow-primary/20"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/70"
+                  : "text-sidebar-foreground/80 hover:translate-x-1 hover:bg-white/[0.07] hover:text-white"
               )}
             >
               <Icon className="size-4" />
@@ -88,7 +88,7 @@ export function Sidebar() {
       </nav>
 
       <div className="p-3 border-t">
-        <div className="rounded-2xl border bg-card p-3.5 shadow-sm">
+        <div className="rounded-2xl border border-white/[0.12] bg-[rgba(30,39,92,0.72)] p-3.5 shadow-[0_14px_40px_rgba(39,32,110,0.22)] backdrop-blur-xl">
           <div className="flex items-center gap-2 text-xs font-semibold">
             <ShieldCheck className="size-3.5 text-primary" /> Role-Based Control
           </div>

@@ -126,109 +126,50 @@ if (role === "member") {
           </Link>
         ))}
       </div>
-     {/* Profile + Calendar */}
-<Card className="overflow-hidden border-0 shadow-xl rounded-3xl h-[320px]">
-  <div className="grid items-stretch gap-0 lg:grid-cols-[1.15fr_0.85fr]">
-    {/* Profile Details */}
-    <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-blue-600 to-purple-600 p-6 flex flex-col justify-between text-white">
-      <div className="absolute -right-16 -top-16 size-44 rounded-full bg-white/10" />
-      <div className="relative">
-      <h2 className="mb-4 text-base font-semibold">
-        My Profile
-      </h2>
+      <Card className="overflow-hidden border-violet-300/30 bg-[rgba(25,35,80,0.75)] p-0 shadow-[0_0_45px_rgba(83,75,255,0.20)]">
+        <div className="grid min-h-[320px] lg:grid-cols-[1.05fr_1.15fr]">
+          <div className="relative overflow-hidden bg-gradient-to-br from-cyan-500 via-blue-600 to-violet-700 p-7 text-white">
+            <div className="absolute -bottom-24 -left-20 size-64 rounded-full bg-cyan-400/20 blur-2xl" />
+            <div className="absolute right-24 top-4 size-20 rounded-full bg-pink-400/20 blur-xl" />
+            <div className="relative z-10 max-w-[58%]">
+              <h2 className="mb-5 text-base font-semibold">My Profile</h2>
+              <div className="grid grid-cols-[82px_12px_1fr] gap-y-3 text-xs">
+                <span className="text-white/70">Name</span><span>:</span><span className="font-semibold">{currentUser.name}</span>
+                <span className="text-white/70">Role</span><span>:</span><span className="capitalize">{currentUser.role}</span>
+                <span className="text-white/70">Department</span><span>:</span><span>{currentUser.department}</span>
+                <span className="text-white/70">Email</span><span>:</span><span className="truncate">{currentUser.email}</span>
+              </div>
+              <Button variant="secondary" size="sm" className="mt-6 rounded-xl border border-white/10 bg-gradient-to-r from-violet-600 to-blue-500 px-4 text-white shadow-lg shadow-violet-950/30 hover:brightness-110" asChild><Link to="/settings">View full profile <ArrowRight className="size-4" /></Link></Button>
+            </div>
+            <div className="absolute bottom-5 right-5 hidden h-52 w-64 -rotate-3 rounded-[24px] border border-cyan-300/35 bg-[#101b67]/80 p-4 shadow-[0_20px_60px_rgba(56,24,255,0.65)] backdrop-blur-md sm:block">
+              <div className="flex items-center justify-between"><div className="h-2 w-24 rounded-full bg-white/25" /><div className="size-8 rounded-full border-[7px] border-pink-400 border-r-cyan-300" /></div>
+              <div className="mt-5 grid grid-cols-3 items-end gap-2 rounded-xl bg-white/[0.06] p-3"><div className="h-12 rounded-t bg-gradient-to-t from-cyan-500 to-cyan-300" /><div className="h-20 rounded-t bg-gradient-to-t from-violet-600 to-purple-300" /><div className="h-16 rounded-t bg-gradient-to-t from-pink-500 to-orange-300" /></div>
+              <div className="mt-3 h-2 rounded-full bg-white/10"><div className="h-full w-3/4 rounded-full bg-gradient-to-r from-cyan-400 to-violet-400" /></div>
+            </div>
+          </div>
+          <div className="grid gap-5 p-5 md:grid-cols-[1fr_0.9fr]">
+            <div><div className="mb-2 flex items-center justify-between"><h3 className="text-sm font-semibold text-white">My Calendar</h3><Badge className="rounded-full border-0 bg-violet-600/70 text-white">Today</Badge></div><Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} defaultMonth={today} className="mx-auto rounded-xl bg-transparent p-0 text-slate-200 [--cell-size:2rem]" /></div>
+            <div className="mt-7 rounded-2xl border border-white/[0.12] bg-white/[0.055] p-4 shadow-[0_12px_35px_rgba(52,45,150,0.16)] backdrop-blur-xl">
+              <div className="mb-3 flex items-center justify-between"><h4 className="text-xs font-semibold text-white">Upcoming</h4><span className="text-[9px] text-slate-400">{myTasks.slice(0, 2).length} events today</span></div>
+              <div className="space-y-2.5">{myTasks.slice(0, 2).map((task, index) => <Link key={task.id} to="/my-work" className={`block rounded-xl border-l-2 ${index ? "border-pink-500" : "border-cyan-400"} bg-white/[0.04] p-3 transition hover:bg-white/[0.08]`}><div className="truncate text-[11px] font-semibold text-white">{task.title}</div><div className="mt-1 flex justify-between text-[9px] text-slate-400"><span>{task.projectName || "Workspace"}</span><span>{task.due}</span></div></Link>)}</div>
+              <Button variant="link" size="sm" className="mt-4 h-auto p-0 text-[10px] text-violet-300" asChild><Link to="/my-work">View all events <ArrowRight className="size-3" /></Link></Button>
+            </div>
+          </div>
+        </div>
+      </Card>
 
-      <div className="grid grid-cols-[96px_14px_1fr] gap-y-2 text-xs sm:text-sm">
-        <span className="font-medium text-white/75">
-          Name
-        </span>
-        <span>:</span>
-        <span className="font-medium">
-          {currentUser.name}
-        </span>
-
-        <span className="font-medium text-white/75">
-          Role
-        </span>
-        <span>:</span>
-        <span>
-          {currentUser.role}
-        </span>
-
-        <span className="font-medium text-white/75">
-          Department
-        </span>
-        <span>:</span>
-        <span>
-          {currentUser.department}
-        </span>
-
-        <span className="font-medium text-white/75">
-          Email
-        </span>
-        <span>:</span>
-        <span>
-          {currentUser.email}
-        </span>
-      </div>
-      <Button variant="secondary" size="sm" className="mt-5 h-8 bg-white/15 px-3 text-xs text-white hover:bg-white/25" asChild>
-        <Link to="/settings">View profile <ArrowRight className="size-4" /></Link>
-      </Button>
-      </div>
-    </div>
-
-    {/* Calendar */}
-    <div className="p-5">
-      <div className="mb-2 flex items-center justify-between">
-      <h3 className="text-sm font-semibold">
-        My Calendar
-      </h3>
-      <Badge variant="secondary">Today</Badge>
-      </div>
-
-      <Calendar
-        mode="single"
-        selected={selectedDate}
-        onSelect={setSelectedDate}
-        defaultMonth={today}
-       className="mx-auto rounded-xl bg-transparent p-0 [--cell-size:2rem]"
-      />
-    </div>
-  </div>
-</Card>
-
-{/* Assigned Projects */}
-<Card className="border-border/70 p-5 shadow-sm">
-  <div className="mb-4 flex items-center justify-between gap-3">
-    <h2 className="font-semibold">My Projects</h2>
-    <Button variant="link" size="sm" className="h-auto p-0 text-primary" asChild><Link to="/projects">View all <ArrowRight className="size-4" /></Link></Button>
-  </div>
-
-  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-    {myProjects.map((project) => (
-      <Link key={project.id} to="/projects/$id" params={{ id: project.id }} 
-      className="
-        group
-        rounded-2xl
-        bg-white
-        border
-        shadow-md
-        hover:shadow-xl
-        hover:-translate-y-1
-        transition
-        duration-300
-        p-5
-        ">
-        <h3 className="font-medium">
-          {project.name}
-        </h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {project.department}
-        </p>
-        <div className="mt-4"><Progress value={project.progress} className="h-1.5" /></div>
-      </Link>
-    ))}
-  </div>
-</Card>
+      <section>
+        <div className="mb-3 flex items-center justify-between"><h2 className="font-semibold text-white">My Projects</h2><Button variant="link" size="sm" className="h-auto p-0 text-xs text-violet-300" asChild><Link to="/projects">View all projects <ArrowRight className="size-4" /></Link></Button></div>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {myProjects.map((project, index) => (
+            <Link key={project.id} to="/projects/$id" params={{ id: project.id }} className="group rounded-[20px] border border-white/[0.12] bg-[linear-gradient(135deg,rgba(35,48,105,0.82),rgba(29,34,88,0.76))] p-4 shadow-[0_14px_38px_rgba(5,8,35,0.22),0_0_24px_rgba(67,118,255,0.10)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-300/60 hover:shadow-[0_0_34px_rgba(109,70,255,0.28)]">
+              <div className="flex items-start justify-between gap-3"><div><h3 className="text-sm font-semibold text-white">{project.name}</h3><p className="mt-1 text-[11px] text-slate-400">{project.department}</p></div><Badge className={`border-0 ${index % 2 ? "bg-blue-500/20 text-blue-300" : "bg-emerald-500/20 text-emerald-300"}`}>{index % 2 ? "In Progress" : "On Track"}</Badge></div>
+              <div className="mt-4 flex items-center gap-3"><Progress value={project.progress} className="h-1.5 flex-1 bg-white/10" /><span className="text-[10px] font-semibold text-cyan-300">{project.progress}%</span></div>
+              <div className="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-3"><div className="flex items-center gap-1.5 text-[10px] text-slate-400"><CalendarDays className="size-3.5" /> Project timeline</div><div className="flex -space-x-2"><Avatar className="size-6 border-2 border-[#11183e]"><AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-[8px] text-white">{currentUser.initials}</AvatarFallback></Avatar><Avatar className="size-6 border-2 border-[#11183e]"><AvatarFallback className="bg-gradient-to-br from-pink-500 to-violet-600 text-[8px] text-white">+2</AvatarFallback></Avatar></div></div>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Assigned Tasks */}
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
