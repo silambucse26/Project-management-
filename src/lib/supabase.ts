@@ -28,6 +28,129 @@ type WorkspaceData = {
 
 type SaveResult = { ok: true } | { ok: false; error: string };
 
+export type MessageRecord = {
+  id: string;
+  sender_id: string;
+  name: string;
+  role: string;
+  department: string;
+  message: string;
+  created_at: string;
+};
+
+export type HelpRequestRecord = {
+  id: string;
+  requestCode: string;
+  category: string;
+  title: string;
+  description: string;
+  priority: "Low" | "Medium" | "High" | "Urgent";
+  status: "Pending" | "In Progress" | "Resolved" | "Rejected";
+  submittedBy: string;
+  submittedById?: string;
+  department: string;
+  assignedTo?: string;
+  createdAt: string;
+  updatedAt?: string;
+};
+
+export type NewHelpRequestRecord = Omit<HelpRequestRecord, "id" | "requestCode" | "createdAt" | "updatedAt">;
+
+function helpRequestRow(request: HelpRequestRecord | NewHelpRequestRecord) {
+  return clean({
+    category: request.category,
+    title: request.title.trim(),
+    description: request.description.trim(),
+    priority: request.priority,
+    status: request.status,
+    submitted_by: request.submittedBy,
+    department: request.department,
+    assigned_to: request.assignedTo,
+    submitted_by_id: request.submittedById,
+    created_at: "createdAt" in request ? request.createdAt : undefined,
+    updated_at: "updatedAt" in request ? request.updatedAt : undefined,
+  });
+}
+
+function helpRequestFromRow(row: any): HelpRequestRecord {
+  return {
+    id: row.id,
+    requestCode: row.request_code,
+    category: row.category,
+    title: row.title,
+    description: row.description,
+    priority: row.priority,
+    status: row.status,
+    submittedBy: row.submitted_by,
+    submittedById: row.submitted_by_id ?? undefined,
+    department: row.department,
+    assignedTo: row.assigned_to ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+export async function loadHelpRequestsFromSupabase(): Promise<{ data: HelpRequestRecord[]; error?: string }> {
+  if (!supabase) return { data: [], error: supabaseConfigError };
+  const { data, error } = await supabase.from("help_requests").select("*").order("created_at", { ascending: false });
+  if (error) {
+    console.error("Supabase help request load failed", error);
+    return { data: [], error: error.message };
+  }
+  return { data: (data ?? []).map(helpRequestFromRow) };
+}
+
+async function saveHelpRequest(request: HelpRequestRecord | NewHelpRequestRecord): Promise<{ ok: true; data: HelpRequestRecord } | { ok: false; error: string }> {
+  if (!supabase) return { ok: false, error: supabaseConfigError };
+  const row = helpRequestRow(request);
+  const query = "id" in request && request.id
+    ? supabase.from("help_requests").update(row).eq("id", request.id).select().single()
+    : supabase.from("help_requests").insert(row).select().single();
+  const { data, error } = await query;
+  if (error) {
+    console.error("Supabase help request save failed", error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true, data: helpRequestFromRow(data) };
+}
+
+function messageRow(message: MessageRecord) {
+  return {
+    id: message.id,
+    sender_id: message.sender_id,
+    sender_name: message.name,
+    sender_role: message.role,
+    department: message.department,
+    message: message.message.trim(),
+    created_at: message.created_at,
+  };
+}
+
+function messageFromRow(row: any): MessageRecord {
+  return {
+    id: row.id,
+    sender_id: row.sender_id ?? "",
+    name: row.sender_name,
+    role: row.sender_role,
+    department: row.department,
+    message: row.message,
+    created_at: row.created_at,
+  };
+}
+
+export async function loadMessagesFromSupabase(): Promise<{ data: MessageRecord[]; error?: string }> {
+  if (!supabase) return { data: [], error: supabaseConfigError };
+  const { data, error } = await supabase
+    .from("pm_messages")
+    .select("id,sender_id,sender_name,sender_role,department,message,created_at")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("Supabase message load failed", error);
+    return { data: [], error: error.message };
+  }
+  return { data: (data ?? []).map(messageFromRow) };
+}
+
 function clean<T extends Record<string, unknown>>(record: T) {
   return Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined));
 }
@@ -289,7 +412,7 @@ function notificationFromRow(row: any): Notification {
     department: row.department ?? undefined,
     title: row.title,
     body: row.body,
-    time: row.time,
+    time: row.created_at ?? row.time,
     read: row.read ?? false,
     href: row.href ?? undefined,
   };
@@ -310,6 +433,16 @@ async function deleteFrom(table: string, id: string): Promise<SaveResult> {
   const { error } = await supabase.from(table).delete().eq("id", id);
   if (error) {
     console.error(`Supabase ${table} delete failed`, error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}
+
+async function insertMessage(message: MessageRecord): Promise<SaveResult> {
+  if (!supabase) return { ok: false, error: supabaseConfigError };
+  const { error } = await supabase.from("pm_messages").insert(messageRow(message));
+  if (error) {
+    console.error("Supabase pm_messages insert failed", error);
     return { ok: false, error: error.message };
   }
   return { ok: true };
@@ -362,4 +495,6 @@ export const db = {
   saveActivity: (activity: Activity) => upsert("pm_activities", activityRow(activity)),
   saveNotification: (notification: Notification) => upsert("pm_notifications", notificationRow(notification)),
   saveNotificationRead: (notification: Notification) => upsert("pm_notifications", notificationRow(notification)),
+  saveMessage: insertMessage,
+  saveHelpRequest,
 };

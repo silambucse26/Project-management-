@@ -21,6 +21,23 @@ const roleLabel: Record<Role, string> = {
   member: "Team Member",
 };
 
+function notificationDate(id: string, time: string) {
+  const parsedTime = new Date(time);
+  if (!Number.isNaN(parsedTime.getTime())) return parsedTime;
+  const idTimestamp = Number(id.startsWith("n-") ? id.slice(2) : NaN);
+  return Number.isFinite(idTimestamp) ? new Date(idTimestamp) : null;
+}
+
+function formatNotificationTime(id: string, time: string) {
+  const date = notificationDate(id, time);
+  if (!date) return time;
+  const today = new Date();
+  const isToday = date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate();
+  return isToday
+    ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : date.toLocaleDateString([], { day: "2-digit", month: "short", year: date.getFullYear() === today.getFullYear() ? undefined : "numeric" });
+}
+
 interface Props {
   title: string;
   subtitle?: string;
@@ -161,7 +178,7 @@ const handleSearch = () => {
                   </div>
 
                   <div className="mt-0.5 text-[10px] text-muted-foreground">
-                    {notification.time}
+                    {formatNotificationTime(notification.id, notification.time)}
                   </div>
                 </div>
               </DropdownMenuItem>

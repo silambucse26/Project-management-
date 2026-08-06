@@ -149,6 +149,52 @@ create table if not exists public.pm_comments (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.pm_messages (
+  id text primary key,
+  sender_id text references public.pm_users(id) on delete set null,
+  sender_name text not null,
+  sender_role text not null check (sender_role in ('admin', 'head', 'member')),
+  department text not null,
+  message text not null check (char_length(trim(message)) > 0),
+  created_at timestamptz not null default now()
+);
+
+create extension if not exists pgcrypto;
+create sequence if not exists public.help_request_code_seq start 1000;
+
+create table if not exists public.help_requests (
+  id uuid primary key default gen_random_uuid(),
+  request_code text not null unique default ('REQ-' || lpad(nextval('public.help_request_code_seq')::text, 4, '0')),
+  category text not null,
+  title text not null check (char_length(trim(title)) > 0),
+  description text not null check (char_length(trim(description)) > 0),
+  priority text not null check (priority in ('Low', 'Medium', 'High', 'Urgent')),
+  status text not null default 'Pending' check (status in ('Pending', 'In Progress', 'Resolved', 'Rejected')),
+  submitted_by text not null,
+  submitted_by_id text references public.pm_users(id) on delete set null,
+  department text not null,
+  assigned_to text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
+);
+
+alter table public.help_requests add column if not exists request_code text;
+alter table public.help_requests alter column id set default gen_random_uuid();
+alter table public.help_requests alter column request_code set default ('REQ-' || lpad(nextval('public.help_request_code_seq')::text, 4, '0'));
+update public.help_requests set request_code = 'REQ-' || lpad(nextval('public.help_request_code_seq')::text, 4, '0') where request_code is null;
+alter table public.help_requests alter column request_code set not null;
+create unique index if not exists help_requests_request_code_idx on public.help_requests(request_code);
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+    and not exists (
+      select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'help_requests'
+    ) then
+    alter publication supabase_realtime add table public.help_requests;
+  end if;
+end $$;
+
 create table if not exists public.pm_leave_requests (
   id text primary key,
   requester_id text references public.pm_users(id) on delete set null,
@@ -192,6 +238,12 @@ create index if not exists pm_tasks_department_idx on public.pm_tasks(department
 create index if not exists pm_approvals_status_idx on public.pm_approvals(status);
 create index if not exists pm_activities_department_idx on public.pm_activities(department);
 create index if not exists pm_notifications_user_idx on public.pm_notifications(user_id);
+create index if not exists pm_messages_created_idx on public.pm_messages(created_at desc);
+create index if not exists pm_messages_department_idx on public.pm_messages(department, created_at desc);
+create index if not exists pm_messages_sender_idx on public.pm_messages(sender_id);
+create index if not exists help_requests_submitter_idx on public.help_requests(submitted_by_id);
+create index if not exists help_requests_department_idx on public.help_requests(department, created_at desc);
+create index if not exists help_requests_status_idx on public.help_requests(status, priority);
 
 alter table public.pm_users enable row level security;
 alter table public.pm_departments enable row level security;
@@ -201,6 +253,8 @@ alter table public.pm_approvals enable row level security;
 alter table public.pm_activities enable row level security;
 alter table public.pm_notifications enable row level security;
 alter table public.pm_comments enable row level security;
+alter table public.pm_messages enable row level security;
+alter table public.help_requests enable row level security;
 alter table public.pm_leave_requests enable row level security;
 alter table public.pm_general_requests enable row level security;
 
@@ -220,6 +274,10 @@ drop policy if exists "public pm notifications read" on public.pm_notifications;
 drop policy if exists "public pm notifications write" on public.pm_notifications;
 drop policy if exists "public pm comments read" on public.pm_comments;
 drop policy if exists "public pm comments write" on public.pm_comments;
+drop policy if exists "public pm messages read" on public.pm_messages;
+drop policy if exists "public pm messages write" on public.pm_messages;
+drop policy if exists "public help requests read" on public.help_requests;
+drop policy if exists "public help requests write" on public.help_requests;
 drop policy if exists "public pm leave read" on public.pm_leave_requests;
 drop policy if exists "public pm leave write" on public.pm_leave_requests;
 drop policy if exists "public pm requests read" on public.pm_general_requests;
@@ -241,6 +299,15 @@ create policy "public pm notifications read" on public.pm_notifications for sele
 create policy "public pm notifications write" on public.pm_notifications for all using (true) with check (true);
 create policy "public pm comments read" on public.pm_comments for select using (true);
 create policy "public pm comments write" on public.pm_comments for all using (true) with check (true);
+create policy "public pm messages read" on public.pm_messages for select using (true);
+create policy "public pm messages write" on public.pm_messages for insert with check (
+  sender_role in ('admin', 'head', 'member') and char_length(trim(message)) > 0
+);
+create policy "public help requests read" on public.help_requests for select using (true);
+create policy "public help requests write" on public.help_requests for all using (true) with check (
+  priority in ('Low', 'Medium', 'High', 'Urgent') and
+  status in ('Pending', 'In Progress', 'Resolved', 'Rejected')
+);
 create policy "public pm leave read" on public.pm_leave_requests for select using (true);
 create policy "public pm leave write" on public.pm_leave_requests for all using (true) with check (true);
 create policy "public pm requests read" on public.pm_general_requests for select using (true);

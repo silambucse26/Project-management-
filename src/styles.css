@@ -184,10 +184,13 @@
   .dashboard-main a.rounded-2xl:hover { border-color: rgb(32 200 255 / 0.5); box-shadow: 0 0 24px rgb(32 200 255 / 0.14); }
   .recharts-cartesian-grid line { stroke: rgb(255 255 255 / 0.07); }
   .recharts-text { fill: #a9b2d0; }
-  .app-shell :where(h1, h2, h3, h4, h5, h6, p, a, button, label, span, th, td, li, input, textarea) {
+  .app-shell :where(h1, h2, h3, h4, h5, h6, p, a, button, label, span, th, td, li, input, textarea, div) {
     color: #fff !important;
   }
   .app-shell :where(input, textarea)::placeholder { color: rgb(255 255 255 / 0.72) !important; }
+  .app-shell select { color: #fff !important; }
+  .app-shell select option { background: #1b2455; color: #fff !important; }
+  .app-shell .help-center-badge { color: #000 !important; }
   .app-shell .recharts-text { fill: #fff; }
   ::selection { background: rgb(116 87 255 / 0.55); color: white; }
 }

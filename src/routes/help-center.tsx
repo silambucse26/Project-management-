@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   useMemo,
+  useEffect,
   useState,
   type ComponentType,
   type Dispatch,
@@ -37,6 +38,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { useApp } from "@/lib/app-store";
+import { db, loadHelpRequestsFromSupabase, supabase, type HelpRequestRecord, type NewHelpRequestRecord } from "@/lib/supabase";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/help-center")({
@@ -54,20 +56,7 @@ type RequestPriority =
   | "High"
   | "Urgent";
 
-type HelpRequest = {
-  id: string;
-  category: string;
-  title: string;
-  description: string;
-  priority: RequestPriority;
-  status: RequestStatus;
-  submittedBy: string;
-  submittedById?: string;
-  department: string;
-  assignedTo?: string;
-  createdAt: string;
-  updatedAt?: string;
-};
+type HelpRequest = HelpRequestRecord;
 
 type RequestStateProps = {
   requests: HelpRequest[];
@@ -140,7 +129,7 @@ const supportTeams = [
   "Department Head",
 ];
 
-const initialHelpRequests: HelpRequest[] = [
+const initialHelpRequests = [
   {
     id: "REQ-1001",
     category: "IT Support",
@@ -216,7 +205,24 @@ function HelpCenterPage() {
   const { role } = useApp();
 
   const [requests, setRequests] =
-    useState<HelpRequest[]>(initialHelpRequests);
+    useState<HelpRequest[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    async function refreshRequests() {
+      const result = await loadHelpRequestsFromSupabase();
+      if (!active) return;
+      if (result.error) { toast.error(`Help Center data could not be loaded: ${result.error}`); return; }
+      setRequests(result.data);
+    }
+    void refreshRequests();
+    if (!supabase) return () => { active = false; };
+    const channel = supabase
+      .channel("help-center-requests")
+      .on("postgres_changes", { event: "*", schema: "public", table: "help_requests" }, () => { void refreshRequests(); })
+      .subscribe();
+    return () => { active = false; void supabase.removeChannel(channel); };
+  }, []);
 
   if (role === "admin") {
     return (
@@ -264,7 +270,7 @@ function AdminHelpCenter({
     return requests.filter((request) => {
       const matchesSearch =
         !query ||
-        request.id.toLowerCase().includes(query) ||
+        request.requestCode.toLowerCase().includes(query) ||
         request.title.toLowerCase().includes(query) ||
         request.description.toLowerCase().includes(query) ||
         request.category.toLowerCase().includes(query) ||
@@ -293,51 +299,28 @@ function AdminHelpCenter({
     priorityFilter,
   ]);
 
-  function updateRequestStatus(
+  async function updateRequestStatus(
     requestId: string,
     status: RequestStatus,
   ) {
-    setRequests((currentRequests) =>
-      currentRequests.map((request) =>
-        request.id === requestId
-          ? {
-              ...request,
-              status,
-              updatedAt: new Date().toISOString(),
-            }
-          : request,
-      ),
-    );
-
+    const current = requests.find((request) => request.id === requestId);
+    if (!current) return;
+    const result = await db.saveHelpRequest({ ...current, status, updatedAt: new Date().toISOString() });
+    if (!result.ok) { toast.error(`Status could not be saved: ${result.error}`); return; }
+    setRequests((items) => items.map((request) => request.id === requestId ? result.data : request));
     toast.success(`Request status changed to ${status}.`);
   }
 
-  function updateRequestAssignment(
+  async function updateRequestAssignment(
     requestId: string,
     assignedTo: string,
   ) {
-    setRequests((currentRequests) =>
-      currentRequests.map((request) => {
-        if (request.id !== requestId) {
-          return request;
-        }
-
-        const isUnassigned =
-          assignedTo === "Unassigned";
-
-        return {
-          ...request,
-          assignedTo: isUnassigned
-            ? undefined
-            : assignedTo,
-          status:
-            !isUnassigned && request.status === "Pending"
-              ? "In Progress"
-              : request.status,
-          updatedAt: new Date().toISOString(),
-        };
-      }),
-    );
+    const current = requests.find((request) => request.id === requestId);
+    if (!current) return;
+    const isUnassigned = assignedTo === "Unassigned";
+    const result = await db.saveHelpRequest({ ...current, assignedTo: isUnassigned ? undefined : assignedTo, status: !isUnassigned && current.status === "Pending" ? "In Progress" : current.status, updatedAt: new Date().toISOString() });
+    if (!result.ok) { toast.error(`Assignment could not be saved: ${result.error}`); return; }
+    setRequests((items) => items.map((request) => request.id === requestId ? result.data : request));
 
     toast.success(
       assignedTo === "Unassigned"
@@ -508,7 +491,7 @@ function AdminHelpCenter({
                       </div>
 
                       <div className="mt-0.5 text-xs text-muted-foreground">
-                        {request.id}
+                        {request.requestCode}
                       </div>
 
                       <p className="mt-2 max-w-72 text-xs text-muted-foreground">
@@ -728,7 +711,7 @@ function EmployeeHelpCenter({
     currentUser.department,
   ]);
 
-  function handleSubmitRequest() {
+  async function handleSubmitRequest() {
     if (!title.trim()) {
       toast.error("Please enter a request title.");
       return;
@@ -741,8 +724,7 @@ function EmployeeHelpCenter({
       return;
     }
 
-    const newRequest: HelpRequest = {
-      id: createRequestId(),
+    const newRequest: NewHelpRequestRecord = {
       category,
       title: title.trim(),
       description: description.trim(),
@@ -751,11 +733,12 @@ function EmployeeHelpCenter({
       submittedBy: currentUser.name,
       submittedById: currentUser.id,
       department: currentUser.department,
-      createdAt: new Date().toISOString(),
     };
 
+    const result = await db.saveHelpRequest(newRequest);
+    if (!result.ok) { toast.error(`Request could not be saved: ${result.error}`); return; }
     setRequests((currentRequests) => [
-      newRequest,
+      result.data,
       ...currentRequests,
     ]);
 
@@ -911,7 +894,7 @@ function EmployeeHelpCenter({
 
                 <Button
                   type="button"
-                  onClick={handleSubmitRequest}
+                  onClick={() => void handleSubmitRequest()}
                 >
                   <Send className="mr-2 size-4" />
                   Submit Request
@@ -1059,7 +1042,7 @@ function EmployeeHelpCenter({
                       className="border-b"
                     >
                       <td className="py-3 pr-4 font-medium">
-                        {request.id}
+                        {request.requestCode}
                       </td>
 
                       <td className="py-3 pr-4">
@@ -1234,7 +1217,7 @@ function StatusBadge({
   return (
     <Badge
       variant="outline"
-      className={className}
+      className={`help-center-badge ${className}`}
     >
       {status}
     </Badge>
@@ -1258,19 +1241,11 @@ function PriorityBadge({
   return (
     <Badge
       variant="outline"
-      className={className}
+      className={`help-center-badge ${className}`}
     >
       {priority}
     </Badge>
   );
-}
-
-function createRequestId() {
-  const number = Math.floor(
-    1000 + Math.random() * 9000,
-  );
-
-  return `REQ-${number}`;
 }
 
 function formatDate(value: string) {

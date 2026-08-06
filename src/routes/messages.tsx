@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useApp } from "@/lib/app-store";
-import { useMemo, useState } from "react";
+import { db, isSupabaseConfigured, loadMessagesFromSupabase, type MessageRecord } from "@/lib/supabase";
+import { useEffect, useMemo, useState } from "react";
 import { Send } from "lucide-react";
 import {
   Select,
@@ -19,15 +20,7 @@ export const Route = createFileRoute("/messages")({
   component: MessagesPage,
 });
 
-type ChatMessage = {
-  id: string;
-  sender_id: string;
-  name: string;
-  role: string;
-  department: string;
-  message: string;
-  created_at: string;
-};
+type ChatMessage = MessageRecord;
 function getLocalDate(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -43,37 +36,23 @@ function MessagesPage() {
   const [message, setMessage] = useState("");
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedDepartment, setSelectedDepartment] = useState("all");
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "1",
-      name: "Admin User",
-      sender_id: "admin-user-id",
-      role: "admin",
-      department: "Management",
-      message:
-        "Welcome team. Use this page for project updates and discussions.",
-      created_at: "2026-07-09T09:30:00",
-    },
-    {
-      id: "2",
-      name: "Department Head",
-      sender_id: "department-head-id",
-      role: "head",
-      department: "Development",
-      message:
-        "Please post your daily progress before leaving today.",
-      created_at: "2026-07-09T10:15:00",
-    },
-    {
-      id: "3",
-      name: "John Smith",
-      sender_id: "john-smith-id",
-      role: "member",
-      department: "Development",
-      message: "Finished the authentication module.",
-      created_at: "2026-07-08T15:30:00",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(isSupabaseConfigured);
+  const [isSending, setIsSending] = useState(false);
+  const [persistenceError, setPersistenceError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    async function loadMessages() {
+      const result = await loadMessagesFromSupabase();
+      if (!active) return;
+      setMessages(result.data);
+      setPersistenceError(result.error ?? "");
+      setIsLoading(false);
+    }
+    void loadMessages();
+    return () => { active = false; };
+  }, []);
 
   const filteredMessages = useMemo(() => {
   return messages
@@ -93,8 +72,8 @@ function MessagesPage() {
     );
 }, [messages, selectedDate, selectedDepartment]);
 
-  function handleSendMessage() {
-    if (!message.trim()) return;
+  async function handleSendMessage() {
+    if (!message.trim() || isSending) return;
 
     const newMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -102,10 +81,18 @@ function MessagesPage() {
       sender_id: currentUser.id,
       role,
       department: currentUser.department,
-      message: message,
+      message: message.trim(),
       created_at: new Date().toISOString(),
     };
 
+    setIsSending(true);
+    setPersistenceError("");
+    const result = await db.saveMessage(newMessage);
+    setIsSending(false);
+    if (!result.ok) {
+      setPersistenceError(`Message could not be saved: ${result.error}`);
+      return;
+    }
     setMessages((prev) => [newMessage, ...prev]);
     setMessage("");
     setSelectedDate(today);
@@ -129,16 +116,17 @@ function MessagesPage() {
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  handleSendMessage();
+                  void handleSendMessage();
                 }
               }}
             />
 
-            <Button onClick={handleSendMessage}>
+            <Button onClick={() => void handleSendMessage()} disabled={isSending || !message.trim()}>
               <Send className="size-4 mr-2" />
-              Send
+              {isSending ? "Sending..." : "Send"}
             </Button>
           </div>
+          {persistenceError && <p className="mt-2 text-xs text-destructive">{persistenceError}</p>}
         </Card>
 
         <div className="flex items-center justify-between">
@@ -198,7 +186,9 @@ function MessagesPage() {
         </div>
 
         <div className="space-y-3">
-          {filteredMessages.length > 0 ? (
+          {isLoading ? (
+            <Card className="p-10 text-center"><p className="text-muted-foreground">Loading team messages...</p></Card>
+          ) : filteredMessages.length > 0 ? (
             filteredMessages.map((chat) => (
               <Card
                 key={chat.id}

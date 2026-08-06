@@ -332,8 +332,8 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2 mb-5 rounded-lg bg-muted p-1">
-          <button className={`rounded-md px-3 py-2 text-sm font-medium ${mode === "signin" ? "bg-background shadow-sm" : "text-muted-foreground"}`} onClick={() => setMode("signin")}>Sign In</button>
-          <button className={`rounded-md px-3 py-2 text-sm font-medium ${mode === "signup" ? "bg-background shadow-sm" : "text-muted-foreground"}`} onClick={() => setMode("signup")}>Create Account</button>
+          <button className={`rounded-md px-3 py-2 text-sm font-medium transition-colors active:bg-blue-200 ${mode === "signin" ? "bg-blue-100 text-blue-700 shadow-sm" : "text-muted-foreground hover:bg-blue-50"}`} onClick={() => setMode("signin")}>Sign In</button>
+          <button className={`rounded-md px-3 py-2 text-sm font-medium transition-colors active:bg-blue-200 ${mode === "signup" ? "bg-blue-100 text-blue-700 shadow-sm" : "text-muted-foreground hover:bg-blue-50"}`} onClick={() => setMode("signup")}>Create Account</button>
         </div>
         <div className="space-y-4">
           {mode === "signin" ? (
@@ -427,7 +427,7 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
             </>
           )}
           {error && <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div>}
-          <Button className="w-full" onClick={mode === "signin" ? submitSignIn : submitSignup} disabled={loading}>
+          <Button className="w-full active:bg-blue-400 active:brightness-100" onClick={mode === "signin" ? submitSignIn : submitSignup} disabled={loading}>
             <LogIn className="size-4" /> {loading ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Account"}
           </Button>
         </div>
@@ -547,7 +547,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   function notify(notification: Omit<Notification, "id" | "time" | "read">) {
-    const newNotification = { ...notification, id: `n-${Date.now()}`, time: "Just now", read: false };
+    const now = Date.now();
+    const newNotification = { ...notification, id: `n-${now}`, time: new Date(now).toISOString(), read: false };
     setNotifications((previous) => [newNotification, ...previous]);
     void db.saveNotification(newNotification);
   }
