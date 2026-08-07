@@ -4,7 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { departments } from "@/data/mockData";
 import { TrendingUp, TrendingDown, Minus, Repeat, CalendarCheck, FileText } from "lucide-react";
@@ -204,6 +204,7 @@ function TeamsPage() {
           <Card key={u.id} className="p-4">
             <div className="flex items-center gap-3">
               <Avatar className="size-11">
+                <AvatarImage src="/member-profile.svg" alt={`${u.name} profile`} />
                 <AvatarFallback className="bg-primary/10 text-primary text-sm">
                   {u.initials}
                 </AvatarFallback>

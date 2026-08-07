@@ -216,12 +216,13 @@ function HelpCenterPage() {
       setRequests(result.data);
     }
     void refreshRequests();
-    if (!supabase) return () => { active = false; };
-    const channel = supabase
+    const client = supabase;
+    if (!client) return () => { active = false; };
+    const channel = client
       .channel("help-center-requests")
       .on("postgres_changes", { event: "*", schema: "public", table: "help_requests" }, () => { void refreshRequests(); })
       .subscribe();
-    return () => { active = false; void supabase.removeChannel(channel); };
+    return () => { active = false; void client.removeChannel(channel); };
   }, []);
 
   if (role === "admin") {

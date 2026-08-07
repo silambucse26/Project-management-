@@ -483,13 +483,14 @@ function TasksPage() {
           <div key={col.id} className="flex items-center gap-2">
             <Button
               variant={selectedStatus === col.id ? "default" : "outline"}
+              className="text-white hover:text-white"
               onClick={() => {
                 setSelectedStatus(col.id);
                 setCreatedDateFilter("");
               }}
             >
               {col.label}
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="ml-2 text-white">
                 {grouped[col.id].length}
               </Badge>
             </Button>
@@ -569,7 +570,7 @@ function TasksPage() {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Task Details</DialogTitle>
+            <DialogTitle className="text-[#FFFFFF]">Task Details</DialogTitle>
           </DialogHeader>
 
           {selectedTask ? (
@@ -577,7 +578,9 @@ function TasksPage() {
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="font-semibold leading-snug">{selectedTask.title}</h3>
+                    <h3 className="font-semibold leading-snug text-[#FFFFFF]">
+                      {selectedTask.title}
+                    </h3>
                     <p className="text-xs text-primary font-medium">{selectedTask.projectName}</p>
                   </div>
 
@@ -585,45 +588,47 @@ function TasksPage() {
                 </div>
 
                 {selectedTask.description && (
-                  <p className="text-sm text-muted-foreground">{selectedTask.description}</p>
+                  <p className="text-sm text-[#FFFFFF]">{selectedTask.description}</p>
                 )}
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">Project Name</div>
-                  <div className="font-medium mt-1">{selectedTask.projectName}</div>
+                  <div className="text-xs text-[#FFFFFF]">Project Name</div>
+                  <div className="mt-1 font-medium text-[#FFFFFF]">{selectedTask.projectName}</div>
                 </div>
 
                 <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">Task Status</div>
+                  <div className="text-xs text-[#FFFFFF]">Task Status</div>
                   <StatusBadge status={selectedTask.status} />
                 </div>
 
                 <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">Start Date</div>
-                  <div className="font-medium mt-1">
+                  <div className="text-xs text-[#FFFFFF]">Start Date</div>
+                  <div className="mt-1 font-medium text-[#FFFFFF]">
                     {displayDueDate(selectedTask.startDate ?? selectedTask.registeredAt ?? "")}
                   </div>
                 </div>
 
                 <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">End Date</div>
-                  <div className="font-medium mt-1">{displayDueDate(selectedTask.due)}</div>
+                  <div className="text-xs text-[#FFFFFF]">End Date</div>
+                  <div className="mt-1 font-medium text-[#FFFFFF]">
+                    {displayDueDate(selectedTask.due)}
+                  </div>
                 </div>
 
                 <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">Assignee</div>
-                  <div className="font-medium mt-1">{selectedTask.assignee}</div>
+                  <div className="text-xs text-[#FFFFFF]">Assignee</div>
+                  <div className="mt-1 font-medium text-[#FFFFFF]">{selectedTask.assignee}</div>
                 </div>
 
                 <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">Approval</div>
+                  <div className="text-xs text-[#FFFFFF]">Approval</div>
                   <StatusBadge status={selectedTask.approvalStatus ?? "not-submitted"} />
                 </div>
 
                 <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground">Delay</div>
+                  <div className="text-xs text-[#FFFFFF]">Delay</div>
 
                   {isDelayed(selectedTask) ? (
                     <Badge className="bg-destructive/15 text-destructive">Delayed Task</Badge>
@@ -635,9 +640,9 @@ function TasksPage() {
 
               <div className="space-y-2 rounded-lg border p-3">
                 <div className="flex items-center justify-between">
-                  <Label>Current Progress</Label>
+                  <Label className="text-[#FFFFFF]">Current Progress</Label>
 
-                  <span className="text-sm font-semibold">
+                  <span className="text-sm font-semibold text-[#FFFFFF]">
                     {selectedTask.completionPercent ??
                       (selectedTask.status === "completed" ? 100 : 0)}
                     %
@@ -654,9 +659,10 @@ function TasksPage() {
 
               {(selectedTask.completionPercent ?? 0) < 100 && (
                 <div className="space-y-2">
-                  <Label>Pending Reason</Label>
+                  <Label className="text-[#FFFFFF]">Pending Reason</Label>
 
                   <Textarea
+                    className="text-[#FFFFFF]"
                     value={detailForm.pendingReason}
                     onChange={(e) =>
                       setDetailForm({
@@ -670,9 +676,10 @@ function TasksPage() {
 
               {isDelayed(selectedTask) && (
                 <div className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-                  <Label>Delay Reason</Label>
+                  <Label className="text-[#FFFFFF]">Delay Reason</Label>
 
                   <Textarea
+                    className="text-[#FFFFFF]"
                     value={detailForm.delayReason}
                     onChange={(e) =>
                       setDetailForm({
@@ -682,18 +689,30 @@ function TasksPage() {
                     }
                   />
 
-                  <Button variant="outline" className="w-full" onClick={sendDelayReason}>
+                  <Button
+                    variant="outline"
+                    className="w-full !text-white"
+                    onClick={sendDelayReason}
+                  >
                     Send Delay Reason
                   </Button>
                 </div>
               )}
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setDetailOpen(false)}>
+                <Button
+                  variant="outline"
+                  className="!text-white"
+                  onClick={() => setDetailOpen(false)}
+                >
                   Close
                 </Button>
 
-                <Button variant="outline" onClick={() => openProgressPopup(selectedTask)}>
+                <Button
+                  variant="outline"
+                  className="!text-white"
+                  onClick={() => openProgressPopup(selectedTask)}
+                >
                   Update Progress
                 </Button>
 
@@ -711,26 +730,33 @@ function TasksPage() {
                     </Button>
                   )}
 
-                <Button onClick={() => openProgressPopup(selectedTask)}>Complete Task</Button>
+                <Button
+                  className="!text-white"
+                  onClick={() => openProgressPopup(selectedTask)}
+                >
+                  Complete Task
+                </Button>
               </DialogFooter>
             </div>
           ) : (
-            <div className="p-4 text-sm text-muted-foreground">Select a task to view details.</div>
+            <div className="p-4 text-sm text-[#FFFFFF]">Select a task to view details.</div>
           )}
         </DialogContent>
       </Dialog>
 
       <Dialog open={progressOpen} onOpenChange={setProgressOpen}>
-        <DialogContent>
+        <DialogContent className="task-progress-dialog">
           <DialogHeader>
-            <DialogTitle>Update Task Progress</DialogTitle>
-            <DialogDescription>How much of the task has been completed?</DialogDescription>
+            <DialogTitle className="task-progress-white-text">Update Task Progress</DialogTitle>
+            <DialogDescription className="task-progress-white-text">
+              How much of the task has been completed?
+            </DialogDescription>
           </DialogHeader>
           {selectedTask ? (
             <div className="space-y-4">
               <div className="rounded-lg border bg-muted/30 p-3">
-                <div className="text-xs text-muted-foreground">Task</div>
-                <div className="font-medium">{selectedTask.title}</div>
+                <div className="task-progress-white-text text-xs">Task</div>
+                <div className="task-progress-white-text font-medium">{selectedTask.title}</div>
               </div>
               <RadioGroup value={progressValue} onValueChange={setProgressValue} className="gap-3">
                 {percentOptions.map((value) => (
@@ -739,7 +765,7 @@ function TasksPage() {
                     className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 hover:bg-muted/40"
                   >
                     <RadioGroupItem value={String(value)} />
-                    <span className="text-sm font-medium">
+                    <span className="task-progress-white-text text-sm font-medium">
                       {value}% Complete{value === 100 ? " (Fully Completed)" : ""}
                     </span>
                   </label>
@@ -747,8 +773,8 @@ function TasksPage() {
               </RadioGroup>
               <div className="rounded-lg border p-3">
                 <div className="flex justify-between text-xs mb-2">
-                  <span className="text-muted-foreground">Status Rules</span>
-                  <span className="font-medium">
+                  <span className="task-progress-white-text">Status Rules</span>
+                  <span className="task-progress-white-text font-medium">
                     {Number(progressValue) === 100 ? "Completed" : "In Progress"}
                   </span>
                 </div>
@@ -761,14 +787,18 @@ function TasksPage() {
                     <span className="font-semibold">{100 - Number(progressValue)}%</span> balance
                   </div>
                 </div>
-                <div className="mt-2 text-xs text-muted-foreground">
+                <div className="task-progress-white-text mt-2 text-xs">
                   0-99% stays In Progress. Only 100% becomes Completed.
                 </div>
               </div>
             </div>
           ) : null}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setProgressOpen(false)}>
+            <Button
+              variant="outline"
+              className="task-progress-cancel"
+              onClick={() => setProgressOpen(false)}
+            >
               Cancel
             </Button>
             <Button onClick={saveProgress}>

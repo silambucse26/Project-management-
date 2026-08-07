@@ -315,8 +315,8 @@ function LoginScreen({ onLogin }: { onLogin: (profile: LoginForm) => Promise<str
           className="min-h-screen grid place-items-center p-4 bg-no-repeat"
           style={{
             backgroundImage: `url(${loginBg})`,
-            backgroundSize: "100% auto",      // Change to 85%, 90%, 95%, etc.
-            backgroundPosition: "center top",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
             backgroundColor: "#3387e7",
           }}

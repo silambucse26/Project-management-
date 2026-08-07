@@ -15,9 +15,7 @@ const statusStyles: Record<string, string> = {
   approved: "bg-success/15 text-success border-success/20",
   "not-submitted": "bg-muted text-muted-foreground border-border",
   pending: "bg-warning/20 text-warning border-warning/30",
-  approved: "bg-success/15 text-success border-success/20",
   rejected: "bg-destructive/15 text-destructive border-destructive/20",
-  changes: "bg-purple/15 text-purple border-purple/20",
   escalated: "bg-warning/20 text-warning border-warning/30",
 };
 
@@ -34,9 +32,7 @@ const labels: Record<string, string> = {
   approved: "Approved",
   "not-submitted": "Not Submitted",
   pending: "Pending",
-  approved: "Approved",
   rejected: "Rejected",
-  changes: "Changes Requested",
   escalated: "Escalated",
 };
 

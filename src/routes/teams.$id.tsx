@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -146,6 +146,7 @@ function TeamMemberDetailsPage() {
       <Card className="p-5">
         <div className="flex flex-col gap-5 md:flex-row md:items-start">
           <Avatar className="size-16">
+            <AvatarImage src="/member-profile.svg" alt={`${member.name} profile`} />
             <AvatarFallback className="bg-primary/10 text-primary text-lg">
               {member.initials}
             </AvatarFallback>

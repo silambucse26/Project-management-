@@ -27,19 +27,12 @@ function SearchPage() {
     task.title.toLowerCase().includes(normalizedQuery),
   );
 
-  const departmentResults = departments.filter((department) =>
-    department.name.toLowerCase().includes(q.toLowerCase()),
-  );
-
   const userResults = users.filter((user) =>
     user.name.toLowerCase().includes(q.toLowerCase()),
   );
 
   const totalResults =
-    projectResults.length +
-    taskResults.length +
-    taskResults.length +
-    userResults.length;
+    projectResults.length + taskResults.length + userResults.length;
 
   return (
     <main className="min-h-screen bg-background p-4 md:p-6">
@@ -130,16 +123,18 @@ function SearchPage() {
             {userResults.length > 0 && (
               <ResultSection title="Users">
                 {userResults.map((user) => (
-                  <div
+                  <Link
                     key={user.id}
-                    className="rounded-xl border bg-card p-4"
+                    to="/teams/$id"
+                    params={{ id: user.id }}
+                    className="block rounded-xl border bg-card p-4 transition hover:bg-muted/50"
                   >
                     <h3 className="font-semibold">{user.name}</h3>
 
                     <p className="mt-1 text-sm text-muted-foreground">
                       {user.title ?? "User"}
                     </p>
-                  </div>
+                  </Link>
                 ))}
               </ResultSection>
             )}

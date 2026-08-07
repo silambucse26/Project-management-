@@ -52,23 +52,60 @@ export function TopHeader({ title, subtitle, badge }: Props) {
     unreadNotifications,
     notifications,
     markNotificationRead,
+    users,
+    visibleUsers,
+    projects,
+    visibleProjects,
   } = useApp();
 
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const searchableProjects = visibleProjects.length ? visibleProjects : projects;
+  const searchableUsers = visibleUsers.length ? visibleUsers : users;
 
-const handleSearch = () => {
-  const query = searchQuery.trim();
+  const handleSearch = () => {
+    const query = searchQuery.trim();
 
-  if (!query) return;
+    if (!query) return;
 
-  navigate({
-    to: "/search",
-    search: {
-      q: query,
-    },
-  });
-};
+    const normalizedQuery = query.toLowerCase();
+
+    const projectMatch = searchableProjects.find(
+      (project) =>
+        project.name.toLowerCase().includes(normalizedQuery) ||
+        project.owner.toLowerCase().includes(normalizedQuery),
+    );
+
+    if (projectMatch) {
+      navigate({
+        to: "/projects/$id",
+        params: { id: projectMatch.id },
+      });
+      return;
+    }
+
+    const userMatch = searchableUsers.find(
+      (user) =>
+        user.name.toLowerCase().includes(normalizedQuery) ||
+        user.email.toLowerCase().includes(normalizedQuery) ||
+        user.title.toLowerCase().includes(normalizedQuery),
+    );
+
+    if (userMatch) {
+      navigate({
+        to: "/teams/$id",
+        params: { id: userMatch.id },
+      });
+      return;
+    }
+
+    navigate({
+      to: "/search",
+      search: {
+        q: query,
+      },
+    });
+  };
 
   return (
     <header className="sticky top-0 z-30 border-b border-white/[0.10] bg-transparent shadow-[0_12px_40px_rgba(14,16,65,0.08)] backdrop-blur-xl">

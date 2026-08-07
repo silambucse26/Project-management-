@@ -192,5 +192,14 @@
   .app-shell select option { background: #1b2455; color: #fff !important; }
   .app-shell .help-center-badge { color: #000 !important; }
   .app-shell .recharts-text { fill: #fff; }
+  .task-progress-dialog .task-progress-white-text {
+    color: #FFFFFF !important;
+  }
+  .task-progress-dialog :where(h1, h2, h3, h4, h5, h6, p, div, span, label) {
+    color: #FFFFFF !important;
+  }
+  .task-progress-dialog .task-progress-cancel {
+    color: #FFFFFF !important;
+  }
   ::selection { background: rgb(116 87 255 / 0.55); color: white; }
 }
